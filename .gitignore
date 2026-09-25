@@ -14,6 +14,6 @@ CMakeUserPresets.json
 *.user
 
 # Test data (large point clouds are not committed)
-/data/
+/test_data/
 *.laz
 *.las
