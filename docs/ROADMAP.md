@@ -1,96 +1,83 @@
 # Roadmap
 
+Scope: everything las-rs 0.11 offers, mirrored in C++; nothing more.
+
 ## M0 - Scaffold
 
 - [x] git repo, licenses, docs
-- [ ] `rust-toolchain.toml`, shim crate skeleton
-- [ ] CMake + Corrosion, `CMakePresets.json`
-- [ ] cbindgen config, generated `lasrs.h`
-- [ ] `lasrs_abi_version()`, panic guard, `lasrs_last_error()`
-- [ ] `.gitattributes` (LF line endings)
-- [ ] CI workflow running from day one (see "CI / CD" below)
+- [x] `rust-toolchain.toml`, shim crate
+- [x] CMake + Corrosion, `CMakePresets.json`
+- [x] cbindgen config, generated `lasrs.h`
+- [x] `lasrs_abi_version()`, panic guard, `lasrs_last_error()`
+- [x] `.gitattributes` (LF line endings), `.clang-format`
 
-## M1 - Read MVP
+## M1 - Read
 
-- [ ] open LAS / LAZ file, read header
-- [ ] parallel read of raw point records into a caller buffer
-- [ ] C++ `lasrs::Reader` with RAII and exceptions
-- [ ] example: read file, print header and timing
+- [x] `Reader::from_path`, from `std::istream`, `with_options`
+- [x] `read_points`, `read_all`, `fill_points`, `seek`
+- [x] parallel LAZ decompression
+- [x] example `lasrs_info`
 
-## M2 - Full read side
+## M2 - Data model
 
-- [ ] all point formats 0 - 10
-- [ ] VLR / EVLR access, CRS (WKT and GeoTIFF keys)
-- [ ] extra bytes descriptions
-- [ ] SoA column output (x, y, z as scaled doubles, attributes)
-- [ ] seek / chunked streaming for files larger than RAM
-- [ ] tests against a corpus of sample files
+- [x] `Header`: all getters, VLRs / EVLRs, `add_point`, `add_point_data`
+- [x] `Builder`, including hidden fields carried over from a `Header`
+- [x] `PointData`: points, columns, raw bytes, `resize_for`
+- [x] `PointDataBuilder`
+- [x] value types: `Point`, `point::Format`, `Classification`,
+      `Transform`, `Bounds`, `Vector`, `Color`, `Version`, `Vlr`,
+      `raw::point::Waveform`
+- [x] WKT CRS: `set_wkt_crs`, `get_wkt_crs_bytes`, `remove_crs_vlrs`
+- [ ] GeoTIFF CRS: `get_geotiff_crs`
 
-## M3 - Write side
+## M3 - Write
 
-- [ ] LAS writer
-- [ ] LAZ writer, parallel compression
-- [ ] header / VLR construction from C++
-- [ ] round-trip tests (read -> write -> read, byte and value checks)
+- [x] `Writer::from_path`, to `std::ostream`, `with_options`
+- [x] `write_point`, `write_points`, `close`, `header`
+- [x] parallel LAZ compression
+- [x] round-trip tests for LAS 1.0 - 1.4, LAZ and extra bytes
 
-## M4 - COPC read
+## M4 - COPC
 
-- [ ] open COPC, read info and hierarchy
-- [ ] query by bounds and by level of detail
-- [ ] parallel node decoding
-- [ ] (optional) HTTP range-request source
+- [x] `CopcReader` from path and `std::istream`
+- [x] hierarchy entries, `read_entry`, `query` with LOD and bounds
+- [x] `copc::VoxelKey`, `copc::Entry`, `copc::CopcInfoVlr`
 
-## M5 - Packaging
-
-- [ ] CMake package config (`find_package(lasrs)`)
-- [ ] release workflow fully automated (see "CI / CD" below)
-- [ ] vcpkg overlay port
-
-## M6 - COPC write
-
-- [ ] depends on copc-rs writer capabilities; evaluate first
-
-## CI / CD (GitHub Actions)
-
-Everything is automated; nothing is built or released by hand.
+## M5 - CI (GitHub Actions)
 
 ### ci.yml - on every push and pull request
 
 - [ ] build + test matrix: Windows (MSVC), Linux (GCC, Clang), macOS
       (Apple Clang, arm64); Debug and Release
-- [ ] `ctest` for C++ tests, `cargo test` for the shim crate
-- [ ] `cargo fmt --check`, `cargo clippy -D warnings`, `clang-format` check
+- [ ] `ctest` for the C++ tests
+- [ ] `cargo fmt --check`, `cargo clippy -D warnings`, clang-format check
 - [ ] cbindgen check: committed `lasrs.h` must match the generated one
-- [ ] `cargo deny check` (licenses, advisories, duplicate crates)
+- [ ] `cargo deny check` (licenses, advisories, bans, sources)
 - [ ] sanitizers job (ASan / UBSan) on Linux
-- [ ] caching: cargo registry + target dir, CMake build dir
-- [ ] status badge in README (green when passing)
+- [ ] caching of cargo downloads
+- [x] status badge in README
 
-### release.yml - on version tag `vX.Y.Z`
+## M6 - Packaging and releases
 
-- [ ] build prebuilt static libs per platform: x64-windows (/MD and /MT),
-      x64-linux, arm64-linux, arm64-macos, x64-macos
-- [ ] package headers, CMake package config, `THIRD-PARTY-NOTICES`
-      (`cargo about`), LICENSE files into one archive per platform
-- [ ] SHA256 checksums and build provenance attestation
-- [ ] create GitHub Release with generated notes from CHANGELOG.md
+- [ ] CMake install rules and package config (`find_package(lasrs)`)
+- [ ] release.yml on tag `vX.Y.Z`: prebuilt static libs for x64-windows
+      (/MD and /MT), x64-linux, arm64-linux, arm64-macos; headers, CMake
+      config, LICENSE files and `THIRD-PARTY-NOTICES` (`cargo about`)
+- [ ] SHA256 checksums, build provenance attestation, release notes from
+      CHANGELOG.md
 - [ ] smoke test: consume each archive from a tiny CMake project
+- [ ] vcpkg overlay port
 
-### Repository hygiene
+## M7 - Repository hygiene
 
 - [ ] branch protection on `main`: PRs required, CI must pass
 - [ ] Dependabot for GitHub Actions and Cargo dependencies
-- [ ] CodeQL code scanning (C++ and Rust)
-- [ ] issue templates (bug, feature), pull request template
-- [ ] SECURITY.md (how to report vulnerabilities), CODE_OF_CONDUCT.md
-- [ ] README badges: CI, release version, license
-- [ ] semantic versioning, Keep a Changelog, signed tags
+- [ ] CodeQL code scanning
+- [ ] issue templates, pull request template
+- [ ] SECURITY.md, CODE_OF_CONDUCT.md
 
-## Open questions
+## Out of scope
 
-- Does las-rs expose parallel LAZ writing, or must the shim call laz-rs
-  directly for that?
-- How complete is the copc-rs writer?
-- Exact API for typed point access: raw records, SoA columns, typed views,
-  or all three?
-- Minimum supported Rust version and C++ standard (C++17 assumed).
+- COPC writing: las-rs has no COPC writer.
+- LAZ files without a chunk table: las-rs rejects them in parallel mode
+  and laz-rs 0.13 fails on them sequentially (upstream bug).
