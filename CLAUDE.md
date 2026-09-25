@@ -61,3 +61,6 @@ cbindgen --config rust/cbindgen.toml --crate lasrs_ffi --output include/lasrs/la
   a status code.
 - Regenerate and commit `lasrs.h` after changing exports.
 - New Rust dependencies must have permissive licenses (cargo deny).
+- All building, testing and releasing is automated in GitHub Actions
+  (see docs/ROADMAP.md "CI / CD"). Keep CI green; new features come with
+  tests that run in CI.

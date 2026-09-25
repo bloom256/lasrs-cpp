@@ -1,5 +1,9 @@
 # lasrs-cpp
 
+[![CI](https://github.com/bloom256/lasrs-cpp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bloom256/lasrs-cpp/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/bloom256/lasrs-cpp?include_prereleases&sort=semver)](https://github.com/bloom256/lasrs-cpp/releases)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
+
 Fast LAS / LAZ / COPC reading and writing for C++, powered by the Rust
 crates [las-rs](https://github.com/gadomski/las-rs),
 [laz-rs](https://github.com/laz-rs/laz-rs) and
@@ -61,6 +65,21 @@ target_link_libraries(my_app PRIVATE lasrs::lasrs)
 ### From source (needs Rust)
 
 See [docs/BUILDING.md](docs/BUILDING.md).
+
+## Project practices
+
+The project follows common GitHub best practices:
+
+- Every push and pull request is built and tested by GitHub Actions on
+  Windows, Linux and macOS; the CI badge above shows the current status.
+- Formatting, linting (clippy, clang-format), license checks
+  (cargo deny) and sanitizers run in CI.
+- Releases are fully automated from version tags: prebuilt binaries,
+  checksums, third-party notices and release notes.
+- `main` is protected; changes land through pull requests with green CI.
+- Dependencies are kept up to date by Dependabot; code is scanned by
+  CodeQL.
+- Semantic versioning and a human-readable [CHANGELOG](CHANGELOG.md).
 
 ## Documentation
 
