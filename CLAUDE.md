@@ -40,6 +40,7 @@ cbindgen --config rust/cbindgen.toml --crate lasrs_ffi --output include/lasrs/la
 - Dependency budget: the shipped library (`lasrs_ffi` + public headers)
   keeps dependencies minimal because users inherit them. Tests, examples,
   benchmarks and tools may use any well-known library.
+- Follow each language's established best practices.
 - C++: follow the C++ Core Guidelines. RAII everywhere, no owning raw
   pointers, no naked new/delete, const by default, std::span / string_view
   for non-owning views, no macros where a language feature works.
