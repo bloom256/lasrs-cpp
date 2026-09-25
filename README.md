@@ -53,7 +53,7 @@ With CMake:
 ```cmake
 include(FetchContent)
 FetchContent_Declare(lasrs
-  URL https://github.com/<owner>/lasrs-cpp/releases/download/vX.Y.Z/lasrs-cpp-x64-windows-md.zip)
+  URL https://github.com/bloom256/lasrs-cpp/releases/download/vX.Y.Z/lasrs-cpp-x64-windows-md.zip)
 FetchContent_MakeAvailable(lasrs)
 target_link_libraries(my_app PRIVATE lasrs::lasrs)
 ```

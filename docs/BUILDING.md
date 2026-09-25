@@ -47,7 +47,7 @@ later builds are incremental.
 ```cmake
 include(FetchContent)
 FetchContent_Declare(lasrs
-  GIT_REPOSITORY https://github.com/<owner>/lasrs-cpp.git
+  GIT_REPOSITORY https://github.com/bloom256/lasrs-cpp.git
   GIT_TAG vX.Y.Z)
 FetchContent_MakeAvailable(lasrs)
 
