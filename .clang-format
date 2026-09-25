@@ -1,6 +1,2 @@
-BasedOnStyle: Google
+BasedOnStyle: Microsoft
 IndentWidth: 4
-ColumnLimit: 120
-AccessModifierOffset: -4
-DerivePointerAlignment: false
-PointerAlignment: Left

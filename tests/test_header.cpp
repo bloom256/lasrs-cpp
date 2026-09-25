@@ -3,7 +3,8 @@
 
 #include "common.hpp"
 
-TEST_CASE("Default header matches las-rs defaults") {
+TEST_CASE("Default header matches las-rs defaults")
+{
     const las::Header header;
     CHECK(header.version() == las::Version(1, 2));
     CHECK(header.system_identifier() == "las-rs");
@@ -12,7 +13,8 @@ TEST_CASE("Default header matches las-rs defaults") {
     CHECK(header.point_format() == las::point::Format(0));
 }
 
-TEST_CASE("Header copies are deep and compare equal") {
+TEST_CASE("Header copies are deep and compare equal")
+{
     const las::Header original(las::Version(1, 4));
     auto copy = original;
     CHECK(copy == original);
@@ -24,7 +26,8 @@ TEST_CASE("Header copies are deep and compare equal") {
     CHECK_FALSE(copy == original);
 }
 
-TEST_CASE("Header::add_point updates counts and bounds") {
+TEST_CASE("Header::add_point updates counts and bounds")
+{
     las::Header header;
     las::Point point;
     point.x = 1.0;
@@ -40,14 +43,16 @@ TEST_CASE("Header::add_point updates counts and bounds") {
     CHECK(header.number_of_points() == 0);
 }
 
-TEST_CASE("Header::add_point_data accumulates a whole batch") {
+TEST_CASE("Header::add_point_data accumulates a whole batch")
+{
     auto reader = las::Reader::from_path(test::data("autzen.las"));
     las::Header header;
     header.add_point_data(reader.read_all());
     CHECK(header.number_of_points() == 106);
 }
 
-TEST_CASE("Builder configures a header") {
+TEST_CASE("Builder configures a header")
+{
     las::Builder builder(las::Version(1, 4));
     builder.point_format = las::point::Format(7);
     builder.system_identifier = "lasrs-cpp test";
@@ -75,7 +80,8 @@ TEST_CASE("Builder configures a header") {
     CHECK(header.all_vlrs().size() == 2);
 }
 
-TEST_CASE("Builder round trips a header, including hidden fields") {
+TEST_CASE("Builder round trips a header, including hidden fields")
+{
     auto reader = las::Reader::from_path(test::data("autzen.las"));
     const las::Builder builder(reader.header());
     CHECK(builder.point_format == reader.header().point_format());
@@ -84,23 +90,26 @@ TEST_CASE("Builder round trips a header, including hidden fields") {
     CHECK(header.bounds() == reader.header().bounds());
 }
 
-TEST_CASE("Builder rejects headers las-rs cannot write") {
+TEST_CASE("Builder rejects headers las-rs cannot write")
+{
     las::Builder builder(las::Version(1, 2));
     builder.point_format = las::point::Format(6);
     CHECK_THROWS_AS(builder.into_header(), las::Error);
     CHECK(builder.minimum_supported_version() == las::Version(1, 4));
 }
 
-TEST_CASE("Builder rejects invalid dates") {
+TEST_CASE("Builder rejects invalid dates")
+{
     las::Builder builder;
     builder.date = std::chrono::year_month_day{std::chrono::year{2023}, std::chrono::month{2}, std::chrono::day{30}};
     CHECK_THROWS_AS(builder.into_header(), las::Error);
 }
 
-TEST_CASE("WKT CRS can be set and read back") {
+TEST_CASE("WKT CRS can be set and read back")
+{
     las::Header header(las::Version(1, 4));
     const std::string wkt = "GEOGCS[\"WGS 84\"]";
-    header.set_wkt_crs(std::span(reinterpret_cast<const uint8_t*>(wkt.data()), wkt.size()));
+    header.set_wkt_crs(std::span(reinterpret_cast<const uint8_t *>(wkt.data()), wkt.size()));
     CHECK(header.has_wkt_crs());
     const auto bytes = header.get_wkt_crs_bytes();
     REQUIRE(bytes.has_value());
@@ -109,7 +118,8 @@ TEST_CASE("WKT CRS can be set and read back") {
     CHECK_FALSE(header.has_crs_vlrs());
 }
 
-TEST_CASE("WKT CRS requires LAS 1.4") {
+TEST_CASE("WKT CRS requires LAS 1.4")
+{
     las::Header header(las::Version(1, 2));
     const std::vector<uint8_t> wkt{'x'};
     CHECK_THROWS_AS(header.set_wkt_crs(wkt), las::Error);

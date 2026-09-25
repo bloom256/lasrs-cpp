@@ -3,7 +3,8 @@
 
 #include "common.hpp"
 
-TEST_CASE("PointData columns match decoded points") {
+TEST_CASE("PointData columns match decoded points")
+{
     auto reader = las::Reader::from_path(test::data("autzen.laz"));
     const auto data = reader.read_all();
     const auto points = data.points();
@@ -19,29 +20,33 @@ TEST_CASE("PointData columns match decoded points") {
     REQUIRE(rgb.has_value());
     CHECK_FALSE(data.nir().has_value());
 
-    for (size_t i = 0; i < points.size(); ++i) {
+    for (size_t i = 0; i < points.size(); ++i)
+    {
         CHECK(x[i] == points[i].x);
         CHECK(intensity[i] == points[i].intensity);
         CHECK(classification[i] == static_cast<uint8_t>(points[i].classification));
         CHECK(return_number[i] == points[i].return_number);
         CHECK((*gps_time)[i] == points[i].gps_time);
-        const auto& [red, green, blue] = (*rgb)[i];
+        const auto &[red, green, blue] = (*rgb)[i];
         CHECK(las::Color(red, green, blue) == points[i].color);
     }
 }
 
-TEST_CASE("PointData raw columns apply the header transforms") {
+TEST_CASE("PointData raw columns apply the header transforms")
+{
     auto reader = las::Reader::from_path(test::data("autzen.las"));
     const auto data = reader.read_points(5);
     const auto transforms = data.transforms();
     const auto x_raw = data.x_raw();
     const auto x = data.x();
-    for (size_t i = 0; i < data.len(); ++i) {
+    for (size_t i = 0; i < data.len(); ++i)
+    {
         CHECK(transforms.x.direct(x_raw[i]) == x[i]);
     }
 }
 
-TEST_CASE("PointData raw bytes round trip through build_from_bytes") {
+TEST_CASE("PointData raw bytes round trip through build_from_bytes")
+{
     auto reader = las::Reader::from_path(test::data("autzen.las"));
     const auto data = reader.read_all();
     CHECK(data.raw_bytes().size() == data.len() * data.record_len());
@@ -50,12 +55,14 @@ TEST_CASE("PointData raw bytes round trip through build_from_bytes") {
     CHECK(copy.points() == data.points());
 }
 
-TEST_CASE("PointDataBuilder::build_from_bytes rejects partial records") {
+TEST_CASE("PointDataBuilder::build_from_bytes rejects partial records")
+{
     const std::vector<uint8_t> bytes(21);
     CHECK_THROWS_AS(las::PointDataBuilder().with_format(las::point::Format(0)).build_from_bytes(bytes), las::Error);
 }
 
-TEST_CASE("PointDataBuilder::build_from_points encodes points") {
+TEST_CASE("PointDataBuilder::build_from_points encodes points")
+{
     las::Point point;
     point.x = 1.0;
     point.y = 2.0;
@@ -66,7 +73,8 @@ TEST_CASE("PointDataBuilder::build_from_points encodes points") {
     CHECK(data.points() == std::vector<las::Point>{point, point});
 }
 
-TEST_CASE("PointData::resize_for exposes a writable slab") {
+TEST_CASE("PointData::resize_for exposes a writable slab")
+{
     auto reader = las::Reader::from_path(test::data("autzen.las"));
     const auto source = reader.read_points(3);
     auto target = las::PointDataBuilder().for_header(reader.header()).build();
@@ -76,7 +84,8 @@ TEST_CASE("PointData::resize_for exposes a writable slab") {
     CHECK(target.points() == source.points());
 }
 
-TEST_CASE("PointData copies are independent") {
+TEST_CASE("PointData copies are independent")
+{
     auto reader = las::Reader::from_path(test::data("autzen.las"));
     const auto original = reader.read_points(3);
     auto copy = original;

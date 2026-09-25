@@ -5,18 +5,21 @@
 
 #include "common.hpp"
 
-namespace {
+namespace
+{
 
-las::Header header_for(const las::Header& source, las::Version version, bool compressed) {
+las::Header header_for(const las::Header &source, las::Version version, bool compressed)
+{
     las::Builder builder(source);
     builder.version = version;
     builder.point_format.is_compressed = compressed;
     return builder.into_header();
 }
 
-}  // namespace
+} // namespace
 
-TEST_CASE("Writer round trips autzen through every LAS version") {
+TEST_CASE("Writer round trips autzen through every LAS version")
+{
     const auto version =
         GENERATE(las::Version(1, 0), las::Version(1, 1), las::Version(1, 2), las::Version(1, 3), las::Version(1, 4));
     auto reader = las::Reader::from_path(test::data("autzen.las"));
@@ -25,7 +28,8 @@ TEST_CASE("Writer round trips autzen through every LAS version") {
     std::stringstream stream;
     {
         las::Writer writer(stream, header_for(reader.header(), version, false));
-        for (const auto& point : points) {
+        for (const auto &point : points)
+        {
             writer.write_point(point);
         }
         writer.close();
@@ -36,7 +40,8 @@ TEST_CASE("Writer round trips autzen through every LAS version") {
     CHECK(round_trip.read_all().points() == points);
 }
 
-TEST_CASE("Writer::from_path picks compression from the extension") {
+TEST_CASE("Writer::from_path picks compression from the extension")
+{
     const auto extension = GENERATE(std::string(".las"), std::string(".laz"));
     const auto path = test::output("from_path" + extension);
     auto reader = las::Reader::from_path(test::data("autzen.las"));
@@ -51,7 +56,8 @@ TEST_CASE("Writer::from_path picks compression from the extension") {
     CHECK(round_trip.read_all().points() == data.points());
 }
 
-TEST_CASE("Writer compresses LAZ with and without parallelism") {
+TEST_CASE("Writer compresses LAZ with and without parallelism")
+{
     const auto parallelism = GENERATE(las::LazParallelism::Yes, las::LazParallelism::No);
     auto reader = las::Reader::from_path(test::data("autzen.laz"));
     const auto data = reader.read_all();
@@ -68,7 +74,8 @@ TEST_CASE("Writer compresses LAZ with and without parallelism") {
     CHECK(round_trip.read_all().points() == data.points());
 }
 
-TEST_CASE("Writer keeps extra bytes") {
+TEST_CASE("Writer keeps extra bytes")
+{
     auto reader = las::Reader::from_path(test::data("extrabytes.laz"));
     const auto data = reader.read_all();
     std::stringstream stream;
@@ -82,7 +89,8 @@ TEST_CASE("Writer keeps extra bytes") {
     CHECK(round_trip.read_all().points() == data.points());
 }
 
-TEST_CASE("Writer updates its header as points are written") {
+TEST_CASE("Writer updates its header as points are written")
+{
     std::stringstream stream;
     las::Writer writer(stream, las::Header());
     las::Point point;
@@ -93,7 +101,8 @@ TEST_CASE("Writer updates its header as points are written") {
     writer.close();
 }
 
-TEST_CASE("Writer rejects points that do not match the format") {
+TEST_CASE("Writer rejects points that do not match the format")
+{
     std::stringstream stream;
     las::Writer writer(stream, las::Header());
     las::Point point;
@@ -101,7 +110,8 @@ TEST_CASE("Writer rejects points that do not match the format") {
     CHECK_THROWS_AS(writer.write_point(point), las::Error);
 }
 
-TEST_CASE("Writer rejects the overlap classification") {
+TEST_CASE("Writer rejects the overlap classification")
+{
     std::stringstream stream;
     las::Writer writer(stream, las::Header());
     las::Point point;
@@ -109,14 +119,16 @@ TEST_CASE("Writer rejects the overlap classification") {
     CHECK_THROWS_AS(writer.write_point(point), las::Error);
 }
 
-TEST_CASE("Writer::close twice reports an error") {
+TEST_CASE("Writer::close twice reports an error")
+{
     std::stringstream stream;
     las::Writer writer(stream, las::Header());
     writer.close();
     CHECK_THROWS_AS(writer.close(), las::Error);
 }
 
-TEST_CASE("Writer closes itself when destroyed") {
+TEST_CASE("Writer closes itself when destroyed")
+{
     std::stringstream stream;
     {
         las::Writer writer(stream, las::Header());

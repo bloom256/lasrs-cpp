@@ -8,13 +8,18 @@
 #include <lasrs/types.hpp>
 #include <lasrs/writer.hpp>
 
-namespace las {
+namespace las
+{
 
-namespace header {
+namespace header
+{
 using las::Builder;
 }
 
 // True if the linked library matches these headers.
-inline bool abi_compatible() { return lasrs_abi_version() == LASRS_ABI_VERSION; }
+inline bool abi_compatible()
+{
+    return lasrs_abi_version() == LASRS_ABI_VERSION;
+}
 
-}  // namespace las
+} // namespace las
