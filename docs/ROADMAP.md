@@ -47,14 +47,14 @@ Scope: everything las-rs 0.11 offers, mirrored in C++; nothing more.
 
 ### ci.yml - on every push and pull request
 
-- [ ] build + test matrix: Windows (MSVC), Linux (GCC, Clang), macOS
+- [x] build + test matrix: Windows (MSVC), Linux (GCC, Clang), macOS
       (Apple Clang, arm64); Debug and Release
-- [ ] `ctest` for the C++ tests
-- [ ] `cargo fmt --check`, `cargo clippy -D warnings`, clang-format check
-- [ ] cbindgen check: committed `lasrs.h` must match the generated one
-- [ ] `cargo deny check` (licenses, advisories, bans, sources)
-- [ ] sanitizers job (ASan / UBSan) on Linux
-- [ ] caching of cargo downloads
+- [x] `ctest` for the C++ tests
+- [x] `cargo fmt --check`, `cargo clippy -D warnings`, clang-format check
+- [x] cbindgen check: committed `lasrs.h` must match the generated one
+- [x] `cargo deny check` (licenses, advisories, bans, sources)
+- [x] sanitizers job (ASan / UBSan) on Linux
+- [x] caching of cargo downloads
 - [x] status badge in README
 
 ## M6 - Compiled library bundle
