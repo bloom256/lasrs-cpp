@@ -30,6 +30,7 @@ file(MAKE_DIRECTORY ${test_data_dir}/output)
 add_executable(lasrs_tests
   test_copc.cpp
   test_header.cpp
+  test_large.cpp
   test_point_data.cpp
   test_reader.cpp
   test_types.cpp
