@@ -57,16 +57,18 @@ Scope: everything las-rs 0.11 offers, mirrored in C++; nothing more.
 - [ ] caching of cargo downloads
 - [x] status badge in README
 
-## M6 - Packaging and releases
+## M6 - Compiled library bundle
 
-- [ ] CMake install rules and package config (`find_package(lasrs)`)
-- [ ] release.yml on tag `vX.Y.Z`: prebuilt static libs for x64-windows
-      (/MD and /MT), x64-linux, arm64-linux, arm64-macos; headers, CMake
-      config, LICENSE files and `THIRD-PARTY-NOTICES` (`cargo about`)
-- [ ] SHA256 checksums, build provenance attestation, release notes from
-      CHANGELOG.md
-- [ ] smoke test: consume each archive from a tiny CMake project
-- [ ] vcpkg overlay port
+No package manager: users take the compiled static library and headers.
+
+- [ ] CMake install rules: `include/lasrs/*`, the static library, and a
+      CMake package config (`find_package(lasrs)`) for convenience
+- [ ] `THIRD-PARTY-NOTICES` (`cargo about`) and LICENSE files in the bundle
+- [ ] docs: how to link the bundle without CMake (system libraries needed
+      per platform)
+- [ ] later, when publishing is wanted: CI builds the bundle per platform
+      (x64-windows /MD and /MT, x64-linux, arm64-macos) and attaches it to
+      GitHub releases
 
 ## M7 - Repository hygiene
 

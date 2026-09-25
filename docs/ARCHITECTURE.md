@@ -145,11 +145,10 @@ it is crossed per point. Therefore:
 
 ## Distribution (planned)
 
-1. **From source**: CMake + Corrosion, requires Rust.
-2. **Prebuilt**: CI builds static libs per platform and attaches them to
-   GitHub releases, together with headers, a CMake package config and
-   `THIRD-PARTY-NOTICES`. No Rust needed.
-3. **vcpkg**: overlay port first, official registry later.
+No package is needed. The product is a compiled bundle: the static library
+`lasrs_ffi` plus `include/lasrs/`. Users either build it from source (CMake
++ Corrosion, requires Rust) or take a prebuilt bundle, and link it like any
+C/C++ static library. Nothing is published yet.
 
 ## Licensing
 
