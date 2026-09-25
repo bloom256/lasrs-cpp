@@ -25,6 +25,32 @@ cargo fmt --manifest-path rust/Cargo.toml
 cbindgen --config rust/cbindgen.toml --crate lasrs_ffi --output include/lasrs/lasrs.h rust
 ```
 
+## Coding principles
+
+- Code must be self-explanatory: clear names, small functions, simple
+  control flow. Do not write comments that restate what the code does.
+  If a comment seems necessary, first ask whether the code is
+  overcomplicated and simplify it instead. Comment only genuinely tricky
+  code (non-obvious invariants, format quirks, spec references, why not
+  what).
+- Do not reinvent the wheel. Never hand-roll math, geometry, CRS
+  transforms, parsing, containers, threading primitives, etc. Use
+  well-known libraries (std, Boost, Eigen, PROJ, fmt, Catch2 in C++;
+  established crates in Rust). Stand on the shoulders of giants.
+- Dependency budget: the shipped library (`lasrs_ffi` + public headers)
+  keeps dependencies minimal because users inherit them. Tests, examples,
+  benchmarks and tools may use any well-known library.
+- C++: follow the C++ Core Guidelines. RAII everywhere, no owning raw
+  pointers, no naked new/delete, const by default, std::span / string_view
+  for non-owning views, no macros where a language feature works.
+- Rust: idiomatic Rust, `cargo clippy` clean, `unsafe` only at the FFI
+  boundary and kept as small as possible.
+- Keep it simple (KISS, YAGNI): implement what the roadmap needs now, no
+  speculative abstractions or configuration knobs.
+- Fail loudly: no silently swallowed errors; propagate with context.
+- Match surrounding code style; formatting is done by `cargo fmt` and
+  `clang-format`, not by hand.
+
 ## Rules
 
 - 7-bit ASCII only in all code and docs.
