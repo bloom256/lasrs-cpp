@@ -9,7 +9,7 @@ to build lasrs-cpp itself from source.
 |---|---|---|
 | Rust (rustup) | pinned by `rust-toolchain.toml` | installs `rustc` and `cargo` |
 | CMake | 3.22+ | |
-| C++ compiler | C++17 | MSVC 2019+, GCC 9+, Clang 10+ |
+| C++ compiler | C++20 | MSVC 2022, GCC 11+, Clang 16+, Apple Clang 15+ |
 | Ninja | any | optional, faster builds |
 
 ### Windows
@@ -21,7 +21,8 @@ winget install Ninja-build.Ninja
 ```
 
 Use the default `x86_64-pc-windows-msvc` Rust toolchain. Open a new
-terminal afterwards so PATH is updated.
+terminal afterwards so PATH is updated. The Ninja presets need the MSVC
+environment, so build from a "Developer PowerShell for VS".
 
 ### Linux / macOS
 
@@ -39,8 +40,15 @@ cmake --build --preset release
 ctest --preset release
 ```
 
-The first build downloads Corrosion and the Rust crates and compiles them;
-later builds are incremental.
+The first build downloads Corrosion, Catch2 and the Rust crates and
+compiles them; later builds are incremental.
+
+## Test data
+
+Configuring the tests copies the sample files that ship with the las crate
+into `test_data/` (gitignored). Larger local files can be dropped there
+too: tests for `reel_0005_20250821-165617_pointcloud.laz` run when it is
+present and are skipped otherwise.
 
 ## Using from another CMake project
 
@@ -48,7 +56,7 @@ later builds are incremental.
 include(FetchContent)
 FetchContent_Declare(lasrs
   GIT_REPOSITORY https://github.com/bloom256/lasrs-cpp.git
-  GIT_TAG vX.Y.Z)
+  GIT_TAG main)
 FetchContent_MakeAvailable(lasrs)
 
 target_link_libraries(my_app PRIVATE lasrs::lasrs)
