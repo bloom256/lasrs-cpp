@@ -1,0 +1,19 @@
+# CMake
+/build/
+/out/
+CMakeUserPresets.json
+
+# Rust
+/rust/target/
+/target/
+
+# IDEs
+/.vs/
+/.vscode/
+/.idea/
+*.user
+
+# Test data (large point clouds are not committed)
+/data/
+*.laz
+*.las
