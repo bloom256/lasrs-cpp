@@ -5,80 +5,130 @@
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 
 Fast LAS / LAZ / COPC reading and writing for C++, powered by the Rust
-crates [las-rs](https://github.com/gadomski/las-rs),
-[laz-rs](https://github.com/laz-rs/laz-rs) and
-[copc-rs](https://github.com/pka/copc-rs).
+crate [las-rs](https://github.com/gadomski/las-rs) and its parallel LAZ
+codec [laz-rs](https://github.com/tmontaigu/laz-rs).
 
-> Status: early development. The API is not stable yet.
+> Status: early development. The API mirrors las-rs 0.11 but is not
+> stable yet.
 
 ## Why
 
-The Rust LAS ecosystem decompresses LAZ chunks in parallel. In practice a
-file that takes about a minute to open in a typical C++ tool loads in
-seconds through the same Rust code (for example laspy with the `lazrs`
-backend). lasrs-cpp brings that speed to C++ without re-implementing the
-codec: it wraps the Rust crates behind a small C ABI and a modern C++ API.
+las-rs decompresses LAZ chunks in parallel on all cores. lasrs-cpp brings
+that speed to C++ without re-implementing the codec: the Rust crates sit
+behind a small C ABI and a modern C++20 API.
+
+For example, a 502 MB LAZ file with 37.6 million points is read in about
+3.4 seconds on a 12-thread desktop.
 
 ## Features
 
-Planned for v1.0 (see [docs/ROADMAP.md](docs/ROADMAP.md)):
+- The las-rs API in C++, with the same names: if you know las-rs, you
+  know lasrs-cpp
+- LAS 1.0 - 1.4, point formats 0 - 10, extra bytes, waveform fields
+- LAZ read and write, parallel over chunks
+- COPC read: hierarchy access, level-of-detail and bounds queries
+- Header, VLR / EVLR, WKT CRS
+- Bulk access: read points in batches, as `Point` structs, as columns
+  (`x()`, `intensity()`, ...) or as raw record bytes
+- Read from paths or any `std::istream`, write to paths or any
+  `std::ostream`
+- Header-only C++20 wrapper with RAII and exceptions, plus a plain C API
+- Static linking: no Rust runtime and no extra DLLs in your application
 
-- LAS 1.0 - 1.4, point formats 0 - 10
-- LAZ read and write, parallel over chunks (multi-core)
-- COPC read: spatial bounds and level-of-detail queries
-- Header, VLR / EVLR, CRS (WKT / GeoTIFF keys), extra bytes
-- Batch, zero-copy API: points are decoded straight into your buffers
-- Header-only C++17 wrapper with RAII and exceptions, plus a plain C API
-- Static linking: no Rust runtime, no extra DLLs in your application
+## Examples
 
-## Example (planned API)
+Read a file in batches:
 
 ```cpp
 #include <lasrs/lasrs.hpp>
 
-int main() {
-    lasrs::Reader reader("cloud.laz");
-    const auto& h = reader.header();
+#include <iostream>
 
-    std::vector<std::byte> buf(h.point_record_length() * 1'000'000);
-    while (auto n = reader.read_raw(buf)) {
-        // n points decoded in parallel into buf
+int main()
+{
+    auto reader = las::Reader::from_path("cloud.laz");
+    std::cout << reader.header().number_of_points() << " points\n";
+
+    auto points = las::PointDataBuilder().for_header(reader.header()).build();
+    while (reader.fill_points(1'000'000, points) != 0)
+    {
+        for (double z : points.z())
+        {
+            // ...
+        }
     }
 }
 ```
+
+Write a LAZ file:
+
+```cpp
+las::Builder builder(las::Version(1, 4));
+builder.point_format = las::point::Format(6);
+auto writer = las::Writer::from_path("out.laz", builder.into_header());
+
+las::Point point;
+point.x = 1.0;
+point.gps_time = 42.0;
+writer.write_point(point);
+writer.close();
+```
+
+Query a COPC file:
+
+```cpp
+auto reader = las::CopcReader::from_path("cloud.copc.laz");
+const las::Bounds area{{637000, 851000, 0}, {638000, 852000, 1000}};
+auto points = reader.query(las::LodSelection::Resolution(1.0), las::BoundsSelection::Within(area));
+```
+
+## Mapping from las-rs
+
+Names and semantics follow las-rs. Where Rust and C++ differ:
+
+| las-rs | lasrs-cpp |
+|---|---|
+| `las::Reader::from_path(p)` | `las::Reader::from_path(p)` |
+| `X::new(...)` | constructor `X(...)` |
+| `Result<T>` | returns `T`, throws `las::Error` |
+| `Option<T>` | `std::optional<T>` |
+| `&str`, `&[u8]` | `std::string_view`, `std::span<const uint8_t>` |
+| iterator (`pd.x()`) | `std::vector` |
+| `impl Read + Seek` / `impl Write + Seek` | `std::istream&` / `std::ostream&` |
+| method on an enum (`t.is_standard()`) | free function (`is_standard(t)`) |
+| `NaiveDate`, `Uuid` | `std::chrono::year_month_day`, `std::array<uint8_t, 16>` |
+
+las-rs cannot write COPC, so neither can lasrs-cpp.
 
 ## Getting it
 
 ### Prebuilt binaries (no Rust needed)
 
-Each release ships static libraries and headers for common platforms.
-With CMake:
+Planned: each release will ship static libraries and headers for common
+platforms, consumable from CMake.
+
+### From source (needs Rust)
 
 ```cmake
 include(FetchContent)
 FetchContent_Declare(lasrs
-  URL https://github.com/bloom256/lasrs-cpp/releases/download/vX.Y.Z/lasrs-cpp-x64-windows-md.zip)
+  GIT_REPOSITORY https://github.com/bloom256/lasrs-cpp.git
+  GIT_TAG main)
 FetchContent_MakeAvailable(lasrs)
 target_link_libraries(my_app PRIVATE lasrs::lasrs)
 ```
 
-### From source (needs Rust)
-
-See [docs/BUILDING.md](docs/BUILDING.md).
+See [docs/BUILDING.md](docs/BUILDING.md) for the toolchain.
 
 ## Project practices
 
-The project follows common GitHub best practices:
-
 - Every push and pull request is built and tested by GitHub Actions on
   Windows, Linux and macOS; the CI badge above shows the current status.
-- Formatting, linting (clippy, clang-format), license checks
-  (cargo deny) and sanitizers run in CI.
-- Releases are fully automated from version tags: prebuilt binaries,
-  checksums, third-party notices and release notes.
-- `main` is protected; changes land through pull requests with green CI.
-- Dependencies are kept up to date by Dependabot; code is scanned by
-  CodeQL.
+- Formatting (cargo fmt, clang-format), linting (clippy), a check that
+  the committed C header is up to date, license checks (cargo deny) and
+  sanitizers run in CI.
+- Planned: automated releases from version tags, Dependabot, CodeQL and
+  a protected `main` branch.
 - Semantic versioning and a human-readable [CHANGELOG](CHANGELOG.md).
 
 ## Documentation
@@ -98,8 +148,9 @@ Licensed under either of
 
 at your option.
 
-Binary releases also contain code from third-party Rust crates; their
-licenses are listed in `THIRD-PARTY-NOTICES` inside each release archive.
+The static library also contains code from third-party Rust crates
+(las-rs is MIT, laz-rs is Apache-2.0); their licenses must be preserved
+when distributing binaries.
 
 ### Contribution
 
