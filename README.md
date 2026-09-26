@@ -150,7 +150,6 @@ distributions, on both x64 and arm64:
 |---|---|---|---|
 | Rocky Linux 8 | 2.28 | GCC 13 (gcc-toolset) | full test suite, C API test |
 | Ubuntu 20.04 | 2.31 | GCC 9 | C API test |
-| Debian 11 | 2.31 | GCC 10 | C API test |
 | Rocky Linux 9 | 2.34 | GCC 11 | full test suite, C API test |
 | Ubuntu 22.04 | 2.35 | GCC 11 | full test suite, C API test |
 | Debian 12 | 2.36 | GCC 12 | full test suite, C API test |
@@ -158,9 +157,9 @@ distributions, on both x64 and arm64:
 | Fedora (latest) | latest | latest GCC | full test suite, C API test |
 | Arch Linux (x64 only) | latest | latest GCC | full test suite, C API test |
 
-Ubuntu 20.04 and Debian 11 ship compilers without the C++20 library
-features the C++ headers use (`std::chrono` calendar types), so only the C
-API is tested there; the library itself works on them.
+Ubuntu 20.04 ships a compiler without the C++20 library features the C++
+headers use (`std::chrono` calendar types), so only the C API is tested
+there; the library itself works on it.
 
 ## Mapping from las-rs
 

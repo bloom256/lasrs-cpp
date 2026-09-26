@@ -7,7 +7,7 @@ set -euo pipefail
 . /etc/os-release
 suite=full
 case "$ID:${VERSION_ID:-}" in
-  ubuntu:20.04 | debian:11)
+  ubuntu:20.04)
     suite=c
     apt-get update -q
     DEBIAN_FRONTEND=noninteractive apt-get install -yq gcc

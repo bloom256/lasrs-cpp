@@ -67,7 +67,7 @@ No package manager: users take the compiled static library and headers.
 - [x] CI builds the bundle for windows-x64, linux-x64, linux-arm64,
       macos-arm64 and macos-x64, tests it with separate C and C++ programs
       and keeps it as a workflow artifact for 30 days (not published)
-- [x] CI tests the Linux bundles on Ubuntu 20.04/22.04/24.04, Debian 11/12,
+- [x] CI tests the Linux bundles on Ubuntu 20.04/22.04/24.04, Debian 12,
       Fedora, Rocky Linux 8/9 and Arch Linux (x64 and arm64)
 - [x] docs: how to link the bundle without CMake (system libraries needed
       per platform)
