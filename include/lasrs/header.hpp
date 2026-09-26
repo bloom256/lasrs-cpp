@@ -2,6 +2,7 @@
 #pragma once
 
 #include <chrono>
+#include <lasrs/crs.hpp>
 #include <lasrs/types.hpp>
 #include <utility>
 
@@ -226,6 +227,25 @@ class Header
             return std::nullopt;
         }
         return detail::to_span(bytes);
+    }
+
+    std::optional<crs::GeoTiffCrs> get_geotiff_crs() const
+    {
+        LasrsGeoTiffCrs *handle = nullptr;
+        detail::check(lasrs_header_get_geotiff_crs(ptr_, &handle));
+        if (handle == nullptr)
+        {
+            return std::nullopt;
+        }
+        const detail::Handle<LasrsGeoTiffCrs, lasrs_geotiff_crs_free> owned(handle);
+        crs::GeoTiffCrs result;
+        const size_t count = lasrs_geotiff_crs_entries_len(handle);
+        result.entries.reserve(count);
+        for (size_t i = 0; i < count; ++i)
+        {
+            result.entries.push_back(crs::detail::from_c(lasrs_geotiff_crs_entry(handle, i)));
+        }
+        return result;
     }
 
     std::optional<copc::CopcInfoVlr> copc_info_vlr() const

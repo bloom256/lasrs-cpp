@@ -124,3 +124,21 @@ TEST_CASE("WKT CRS requires LAS 1.4")
     const std::vector<uint8_t> wkt{'x'};
     CHECK_THROWS_AS(header.set_wkt_crs(wkt), las::Error);
 }
+
+TEST_CASE("GeoTIFF CRS keys are decoded")
+{
+    const auto reader = las::Reader::from_path(test::data("32-1-472-150-76.laz"));
+    const auto crs = reader.header().get_geotiff_crs();
+    REQUIRE(crs.has_value());
+    CHECK(crs->get_projected_crs_geo_key_value() == uint16_t{25832});
+    CHECK(crs->get_vertical_crs_geo_key_value() == uint16_t{5941});
+    CHECK_FALSE(crs->get_geodetic_crs_geo_key_value().has_value());
+    CHECK(std::ranges::any_of(crs->entries, [](const las::crs::GeoTiffKeyEntry &entry) {
+        return std::holds_alternative<std::string>(entry.data);
+    }));
+}
+
+TEST_CASE("Headers without GeoTIFF VLRs have no GeoTIFF CRS")
+{
+    CHECK_FALSE(las::Header().get_geotiff_crs().has_value());
+}

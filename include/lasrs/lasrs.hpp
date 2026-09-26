@@ -2,6 +2,7 @@
 #pragma once
 
 #include <lasrs/copc.hpp>
+#include <lasrs/crs.hpp>
 #include <lasrs/header.hpp>
 #include <lasrs/point_data.hpp>
 #include <lasrs/reader.hpp>
