@@ -53,7 +53,7 @@ pub unsafe extern "C" fn lasrs_reader_new(
     stream: LasrsInputStream,
     out: *mut *mut LasrsReader,
 ) -> LasrsStatus {
-    open(out, || Ok(Reader::new(InputStream::new(stream))?))
+    open(out, || Ok(Reader::new(InputStream::buffered(stream))?))
 }
 
 #[unsafe(no_mangle)]
@@ -64,7 +64,10 @@ pub unsafe extern "C" fn lasrs_reader_with_options(
 ) -> LasrsStatus {
     open(out, || {
         let options = ReaderOptions::default().with_laz_parallelism(laz_parallelism.into());
-        Ok(Reader::with_options(InputStream::new(stream), options)?)
+        Ok(Reader::with_options(
+            InputStream::buffered(stream),
+            options,
+        )?)
     })
 }
 

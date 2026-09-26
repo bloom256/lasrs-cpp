@@ -6,7 +6,7 @@ use crate::{
     into_handle,
     point_data::LasrsPointData,
     reader::LasrsLazParallelism,
-    stream::{LasrsOutputStream, OutputStream},
+    stream::{BufferedOutput, LasrsOutputStream, OutputStream},
     types::{LasrsPoint, LasrsStr, borrow_slice},
 };
 use las::{Header, Writer, WriterOptions};
@@ -14,7 +14,7 @@ use std::{fs::File, io::BufWriter};
 
 pub enum LasrsWriter {
     File(Writer<BufWriter<File>>),
-    Stream(Writer<OutputStream>),
+    Stream(Writer<BufferedOutput>),
 }
 
 macro_rules! with_writer {
@@ -65,7 +65,7 @@ pub unsafe extern "C" fn lasrs_writer_new(
     open(out, || {
         let header = unsafe { owned_header(header) };
         Ok(LasrsWriter::Stream(Writer::new(
-            OutputStream::new(stream),
+            OutputStream::buffered(stream),
             header,
         )?))
     })
@@ -82,7 +82,7 @@ pub unsafe extern "C" fn lasrs_writer_with_options(
         let header = unsafe { owned_header(header) };
         let options = WriterOptions::default().with_laz_parallelism(laz_parallelism.into());
         Ok(LasrsWriter::Stream(Writer::with_options(
-            OutputStream::new(stream),
+            OutputStream::buffered(stream),
             header,
             options,
         )?))

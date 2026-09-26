@@ -2,7 +2,7 @@
 
 use std::{
     ffi::c_void,
-    io::{self, Read, Seek, SeekFrom, Write},
+    io::{self, BufReader, BufWriter, Read, Seek, SeekFrom, Write},
 };
 
 /// Origin of a seek, as in `std::io::SeekFrom`.
@@ -57,15 +57,21 @@ pub struct LasrsOutputStream {
 pub(crate) struct InputStream(LasrsInputStream);
 pub(crate) struct OutputStream(LasrsOutputStream);
 
+/// Buffered like las-rs buffers files in `from_path`: the sequential LAZ
+/// codec issues many tiny reads and writes, each of which would otherwise
+/// cross into C++.
+pub(crate) type BufferedInput = BufReader<InputStream>;
+pub(crate) type BufferedOutput = BufWriter<OutputStream>;
+
 impl InputStream {
-    pub(crate) fn new(stream: LasrsInputStream) -> Self {
-        Self(stream)
+    pub(crate) fn buffered(stream: LasrsInputStream) -> BufferedInput {
+        BufReader::new(Self(stream))
     }
 }
 
 impl OutputStream {
-    pub(crate) fn new(stream: LasrsOutputStream) -> Self {
-        Self(stream)
+    pub(crate) fn buffered(stream: LasrsOutputStream) -> BufferedOutput {
+        BufWriter::new(Self(stream))
     }
 }
 

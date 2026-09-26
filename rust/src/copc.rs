@@ -6,7 +6,7 @@ use crate::{
     header::LasrsHeader,
     into_handle,
     point_data::LasrsPointData,
-    stream::{InputStream, LasrsInputStream},
+    stream::{BufferedInput, InputStream, LasrsInputStream},
     types::{LasrsBounds, LasrsEntry, LasrsStr, LasrsVoxelKey, borrow_slice_mut},
 };
 use las::{BoundsSelection, CopcReader, LodSelection, copc::VoxelKey};
@@ -14,7 +14,7 @@ use std::{fs::File, io::BufReader};
 
 pub enum LasrsCopcReader {
     File(CopcReader<'static, BufReader<File>>),
-    Stream(CopcReader<'static, InputStream>),
+    Stream(CopcReader<'static, BufferedInput>),
 }
 
 macro_rules! with_reader {
@@ -102,9 +102,9 @@ pub unsafe extern "C" fn lasrs_copc_reader_new(
     out: *mut *mut LasrsCopcReader,
 ) -> LasrsStatus {
     open(out, || {
-        Ok(LasrsCopcReader::Stream(CopcReader::new(InputStream::new(
-            stream,
-        ))?))
+        Ok(LasrsCopcReader::Stream(CopcReader::new(
+            InputStream::buffered(stream),
+        )?))
     })
 }
 
