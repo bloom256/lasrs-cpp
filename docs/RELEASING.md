@@ -11,7 +11,7 @@ version tag is pushed. To release version `X.Y.Z`:
 4. Tag and push the tag:
 
    ```
-   git tag -s vX.Y.Z -m "lasrs-cpp X.Y.Z"
+   git tag -a vX.Y.Z -m "lasrs-cpp X.Y.Z"    # or -s to sign it
    git push origin vX.Y.Z
    ```
 
