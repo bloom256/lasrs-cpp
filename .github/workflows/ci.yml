@@ -41,7 +41,7 @@ jobs:
       CC: ${{ matrix.config.cc }}
       CXX: ${{ matrix.config.cxx }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust
         run: .github/scripts/install-rust.sh
       - uses: Swatinem/rust-cache@v2
@@ -90,15 +90,15 @@ jobs:
         exclude:
           - { arch: arm64, image: "archlinux:latest" }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install compiler
         id: deps
         run: bash .github/scripts/install-distro-deps.sh
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: lasrs-cpp-linux-${{ matrix.arch }}
           path: bundle
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: test-data
           path: test_data
@@ -130,7 +130,7 @@ jobs:
       ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
       UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust
         run: .github/scripts/install-rust.sh
       - uses: Swatinem/rust-cache@v2
@@ -152,7 +152,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust
         run: .github/scripts/install-rust.sh
       - uses: Swatinem/rust-cache@v2
