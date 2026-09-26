@@ -18,7 +18,8 @@ that speed to C++ without re-implementing the codec: the Rust crates sit
 behind a small C ABI and a modern C++20 API.
 
 On a real-world 502 MB LAZ file with 37.6 million points lasrs-cpp reads
-about 3.3x faster than PDAL and 7.5x faster than LASzip (see
+about 3.2x faster than PDAL and 7.7x faster than LASzip, and writes it
+about 4x faster than LASzip and 5.8x faster than PDAL (see
 [Performance](#performance)).
 
 ## Features
@@ -91,15 +92,16 @@ with the file in the OS cache:
 
 | Library | Read | Write |
 |---|---:|---:|
-| **lasrs-cpp, 12 threads** | **3.6 s** (10.5 M points/s) | **3.1 s** (12.2 M points/s) |
-| lasrs-cpp, 1 thread | 21.0 s (1.8 M points/s) | 10.7 s (3.5 M points/s) |
-| PDAL 2.10 (laz-perf), 7 threads (default) | 11.9 s (3.2 M points/s) | - |
-| laz-perf 3.4, 1 thread | 19.7 s (1.9 M points/s) | 12.6 s (3.0 M points/s) |
-| LASzip 3.4 (used by liblas, LAStools), 1 thread | 26.9 s (1.4 M points/s) | - |
-| laspy 2.7 + lazrs, 12 threads | 3.9 s (9.7 M points/s) | 2.9 s (12.8 M points/s) |
+| **lasrs-cpp, 12 threads** | **3.5 s** (10.8 M points/s) | **3.0 s** (12.6 M points/s) |
+| lasrs-cpp, 1 thread | 20.6 s (1.8 M points/s) | 10.7 s (3.5 M points/s) |
+| PDAL 2.10 (laz-perf), 7 threads (default) | 11.2 s (3.4 M points/s) | 17.4 s (2.2 M points/s), 1 thread |
+| laz-perf 3.4, 1 thread | 19.7 s (1.9 M points/s) | 12.7 s (3.0 M points/s) |
+| LASzip 3.4 (used by liblas, LAStools), 1 thread | 26.8 s (1.4 M points/s) | 11.9 s (3.2 M points/s) |
+| laspy 2.7 + lazrs, 12 threads | 3.6 s (10.4 M points/s) | 3.5 s (10.7 M points/s) |
 
-PDAL does not get faster with more threads on this file (12.3 s with 12).
-Write numbers are only measured where the library can write raw records.
+PDAL does not get faster with more threads on this file (13.0 s with 12);
+its LAS writer is single-threaded. Write times start from points already
+in memory in each library's own representation.
 Reproduce with [benchmarks/](benchmarks/README.md).
 
 ## Mapping from las-rs
