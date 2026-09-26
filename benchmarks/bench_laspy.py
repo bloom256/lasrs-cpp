@@ -17,7 +17,7 @@ import laspy
 import psutil
 from laspy import LazBackend
 
-LIBRARY = "laspy + lazrs"
+LIBRARY = "laspy + lazrs (Python)"
 CHUNK = 1_000_000
 
 

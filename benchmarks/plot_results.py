@@ -20,6 +20,9 @@ import matplotlib.pyplot as plt  # noqa: E402
 plt.rcParams["svg.hashsalt"] = "lasrs-cpp"
 
 HIGHLIGHT = "lasrs-cpp"
+# The chart compares what C++ users choose between; these stay in the tables
+# only: laspy is Python, laz-perf is the codec PDAL is measured with.
+TABLES_ONLY = ("laspy", "laz-perf")
 THEMES = {
     "light": {"accent": "#2a78d6", "muted": "#8a8984", "text": "#0b0b0b", "secondary": "#52514e"},
     "dark": {"accent": "#3987e5", "muted": "#6e6d68", "text": "#ffffff", "secondary": "#c3c2b7"},
@@ -39,6 +42,8 @@ def fastest_per_library(results: str) -> dict:
         row = ROW.match(line)
         if section and row:
             library, threads, seconds = row["library"].strip(), row["threads"].strip(), float(row["seconds"])
+            if library.startswith(TABLES_ONLY):
+                continue
             if library not in tables[section] or seconds < tables[section][library][1]:
                 tables[section][library] = (f"{library}, {threads}", seconds)
     return {name: sorted(rows.values(), key=lambda row: row[1]) for name, rows in tables.items()}
@@ -83,7 +88,7 @@ def draw_social(tables: dict, theme: dict, output: Path) -> None:
     figure.text(0.06, 0.74, "Fast LAS / LAZ / COPC for C++: the las-rs API, parallel LAZ",
                 fontsize=22, color=theme["secondary"])
     axis = figure.add_axes((0.30, 0.14, 0.60, 0.46))
-    rows = [row for row in tables["Read"] if not row[0].startswith("laspy")]
+    rows = tables["Read"]
     labels = [label for label, _ in rows][::-1]
     seconds = [value for _, value in rows][::-1]
     colors = [theme["accent"] if label.startswith(HIGHLIGHT) else theme["muted"] for label in labels]

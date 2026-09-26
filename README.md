@@ -94,31 +94,33 @@ auto points = reader.query(las::LodSelection::Resolution(1.0), las::BoundsSelect
 AHN4 tile 25GN2_18 (Amsterdam, public domain): 105.6 million points, LAS 1.4
 point format 8, 952 MB. Intel Core i7-10750H (6 cores, 12 threads), 32 GB,
 Windows 11; best of 3 runs, each case in its own process, file in the OS
-cache. The chart at the top shows each library in its fastest
-configuration; all configurations are in the tables below.
+cache. The chart at the top compares the C++ options (lasrs-cpp, PDAL,
+LASzip), each in its fastest configuration; the tables below have every
+configuration, plus laz-perf (the codec inside PDAL) and laspy for
+reference.
 
 **Read**
 
 | Library | Threads | Seconds | Million points/s | Peak memory (MB) |
 |---|---|---:|---:|---:|
 | **lasrs-cpp** | **12** | **11.5** | **9.2** | 99 |
-| laspy 2.7 + lazrs | 12 | 12.6 | 8.4 | 139 |
+| laspy 2.7 + lazrs (Python) | 12 | 12.6 | 8.4 | 139 |
 | PDAL 2.10 | 7 (default) | 41.2 | 2.6 | 84 |
 | PDAL 2.10 | 12 | 43.1 | 2.5 | 126 |
 | laz-perf 3.4 | 1 | 63.6 | 1.7 | 16 |
 | LASzip 3.4 | 1 | 65.6 | 1.6 | 1 |
 | lasrs-cpp | 1 | 66.0 | 1.6 | 47 |
 | PDAL 2.10 | 1 | 67.1 | 1.6 | 33 |
-| laspy 2.7 + lazrs | 1 | 67.6 | 1.6 | 89 |
+| laspy 2.7 + lazrs (Python) | 1 | 67.6 | 1.6 | 89 |
 
 **Write**
 
 | Library | Threads | Seconds | Million points/s | Peak memory (MB) |
 |---|---|---:|---:|---:|
 | **lasrs-cpp** | **12** | **9.8** | **10.8** | 89 |
-| laspy 2.7 + lazrs | 12 | 10.9 | 9.7 | 84 |
+| laspy 2.7 + lazrs (Python) | 12 | 10.9 | 9.7 | 84 |
 | lasrs-cpp | 1 | 39.3 | 2.7 | 0 |
-| laspy 2.7 + lazrs | 1 | 41.7 | 2.5 | 0 |
+| laspy 2.7 + lazrs (Python) | 1 | 41.7 | 2.5 | 0 |
 | LASzip 3.4 | 1 | 42.2 | 2.5 | 136 |
 | laz-perf 3.4 | 1 | 46.8 | 2.3 | 0 |
 | PDAL 2.10 | 1 | 77.9 | 1.4 | 10 |
