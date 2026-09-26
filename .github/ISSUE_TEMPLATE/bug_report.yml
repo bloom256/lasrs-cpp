@@ -1,0 +1,46 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what happened instead. Include error messages.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: A minimal code snippet, and if possible a small file or a link to one.
+    validations:
+      required: true
+  - type: input
+    id: file
+    attributes:
+      label: File details
+      description: LAS version, point format, compressed or not, number of points.
+      placeholder: LAS 1.4, point format 6, LAZ, 12 million points
+  - type: input
+    id: platform
+    attributes:
+      label: Platform and compiler
+      placeholder: Windows 11 x64, MSVC 19.44
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: How you got lasrs-cpp
+      options:
+        - Built from source
+        - Prebuilt bundle from CI
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: lasrs-cpp version or commit
+    validations:
+      required: true

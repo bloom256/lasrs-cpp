@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an improvement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        lasrs-cpp mirrors the las-rs API and adds no features of its own.
+        Requests for new format features usually belong to
+        [las-rs](https://github.com/gadomski/las-rs).
+  - type: textarea
+    id: need
+    attributes:
+      label: What you need
+      description: The problem you are trying to solve.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed solution
+      description: How it could look in the C++ API, and the las-rs API it maps to, if any.
