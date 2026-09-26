@@ -27,9 +27,5 @@ configure = "cmake -S . -B ../build/bench -G Ninja -DCMAKE_BUILD_TYPE=Release"
 build = { cmd = "cmake --build ../build/bench", depends-on = ["configure"] }
 
 [tasks.bench]
-args = [
-  { arg = "file", default = "../test_data/reel_0005_20250821-165617_pointcloud.laz" },
-  { arg = "runs", default = "3" },
-]
-cmd = "../build/bench/lasrs_bench {{ file }} {{ runs }} && python bench_laspy.py {{ file }} {{ runs }}"
+cmd = "python run_bench.py"
 depends-on = ["build"]
