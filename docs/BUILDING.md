@@ -97,8 +97,10 @@ static library plus the system libraries the Rust code needs:
 - Windows (MSVC): `lasrs_ffi.lib kernel32.lib ntdll.lib userenv.lib
   ws2_32.lib dbghelp.lib`. The library uses the dynamic release CRT (`/MD`).
 - Linux: `-llasrs_ffi -lgcc_s -lutil -lrt -lpthread -lm -ldl`
-- macOS: see `lib/cmake/lasrs/lasrs-config.cmake`, which lists the exact
-  system libraries for the platform the bundle was built on.
+- macOS: `-llasrs_ffi -framework CoreFoundation -lSystem -lc -lm`
+
+`lib/cmake/lasrs/lasrs-config.cmake` lists the exact system libraries for
+the platform the bundle was built on.
 
 ## Regenerating the C header
 

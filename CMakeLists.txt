@@ -25,6 +25,12 @@ target_include_directories(lasrs_ffi INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
+if(APPLE)
+  # chrono's time zone lookup (iana-time-zone) calls CoreFoundation, which
+  # Corrosion does not list among the staticlib's system libraries.
+  target_link_libraries(lasrs_ffi INTERFACE "-framework CoreFoundation")
+endif()
+
 add_library(lasrs INTERFACE)
 add_library(lasrs::lasrs ALIAS lasrs)
 target_compile_features(lasrs INTERFACE cxx_std_20)
