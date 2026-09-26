@@ -28,6 +28,29 @@ target_include_directories(lasrs INTERFACE
 target_compile_features(lasrs INTERFACE cxx_std_20)
 target_link_libraries(lasrs INTERFACE lasrs_ffi)
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+install(DIRECTORY include/lasrs DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES LICENSE-MIT LICENSE-APACHE DESTINATION ${CMAKE_INSTALL_DATADIR}/lasrs)
+corrosion_install(TARGETS lasrs_ffi EXPORT lasrs-targets)
+install(TARGETS lasrs EXPORT lasrs-targets)
+
+set(config_dir ${CMAKE_INSTALL_LIBDIR}/cmake/lasrs)
+install(EXPORT lasrs-targets NAMESPACE lasrs:: DESTINATION ${config_dir})
+configure_package_config_file(cmake/lasrs-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/lasrs-config.cmake
+  INSTALL_DESTINATION ${config_dir}
+  NO_SET_AND_CHECK_MACRO
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/lasrs-config-version.cmake
+  COMPATIBILITY SameMinorVersion)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/lasrs-config.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/lasrs-config-version.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/corrosion/lasrs-targetsCorrosion.cmake
+  DESTINATION ${config_dir})
+
 if(LASRS_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
