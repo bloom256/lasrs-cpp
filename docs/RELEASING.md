@@ -5,7 +5,8 @@ version tag is pushed. To release version `X.Y.Z`:
 
 1. Set the version in `CMakeLists.txt` (`project(... VERSION X.Y.Z)`) and
    `rust/Cargo.toml` (`version = "X.Y.Z"`).
-2. Set `LASRS_VERSION` in the README's download snippet to `vX.Y.Z`.
+2. Set `LASRS_VERSION` in the README's download snippet to `vX.Y.Z`, and
+   `version` / `date-released` in `CITATION.cff`.
 3. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`
    and add a new empty `## [Unreleased]` above it.
 4. Commit, push, and wait for CI to pass.
