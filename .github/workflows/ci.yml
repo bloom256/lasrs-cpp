@@ -32,7 +32,9 @@ jobs:
           - { name: Windows MSVC, os: windows-latest, cc: cl, cxx: cl }
           - { name: Linux GCC, os: ubuntu-latest, cc: gcc, cxx: g++ }
           - { name: Linux Clang, os: ubuntu-latest, cc: clang, cxx: clang++ }
+          - { name: Linux ARM GCC, os: ubuntu-24.04-arm, cc: gcc, cxx: g++ }
           - { name: macOS Clang, os: macos-latest, cc: clang, cxx: clang++ }
+          - { name: macOS Intel Clang, os: macos-15-intel, cc: clang, cxx: clang++ }
     env:
       CC: ${{ matrix.config.cc }}
       CXX: ${{ matrix.config.cxx }}
@@ -63,7 +65,9 @@ jobs:
         include:
           - { name: windows-x64, os: windows-latest }
           - { name: linux-x64, os: ubuntu-latest }
+          - { name: linux-arm64, os: ubuntu-24.04-arm }
           - { name: macos-arm64, os: macos-latest }
+          - { name: macos-x64, os: macos-15-intel }
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
