@@ -1,0 +1,47 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  analyze:
+    name: Analyze ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { language: c-cpp, build-mode: manual }
+          - { language: rust, build-mode: none }
+          - { language: actions, build-mode: none }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+      - name: Install Rust
+        if: matrix.build-mode == 'manual'
+        run: .github/scripts/install-rust.sh
+      - uses: lukka/get-cmake@latest
+        if: matrix.build-mode == 'manual'
+      - name: Build
+        if: matrix.build-mode == 'manual'
+        run: |
+          cmake --preset release
+          cmake --build --preset release
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}
