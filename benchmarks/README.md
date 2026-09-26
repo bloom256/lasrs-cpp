@@ -33,11 +33,17 @@ by [GeoTiles](https://geotiles.citg.tudelft.nl), TU Delft.
 
 Everything goes to `test_data/output/bench/<input name>/`:
 
-- `results.md`: the timing table and the verification table
+- `results.md`: the machine, the timing tables and the verification table
 - one `.laz` per write benchmark, e.g. `lasrs-cpp_write--12-threads.laz`
 
 About 7 output files of roughly the input's size are kept, so plan the
 disk space accordingly.
+
+To redraw the README chart from a results file:
+
+```
+pixi run python plot_results.py ../test_data/output/bench/<input name>/results.md ../docs/images
+```
 
 ## Method
 

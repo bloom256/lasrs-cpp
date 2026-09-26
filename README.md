@@ -85,10 +85,16 @@ auto points = reader.query(las::LodSelection::Resolution(1.0), las::BoundsSelect
 
 ## Performance
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/benchmark-dark.svg">
+  <img alt="Read and write times: lasrs-cpp 11.5 s read and 9.8 s write, PDAL 41.2 s and 77.9 s, LASzip 65.6 s and 42.2 s" src="docs/images/benchmark-light.svg">
+</picture>
+
 AHN4 tile 25GN2_18 (Amsterdam, public domain): 105.6 million points, LAS 1.4
 point format 8, 952 MB. Intel Core i7-10750H (6 cores, 12 threads), 32 GB,
 Windows 11; best of 3 runs, each case in its own process, file in the OS
-cache.
+cache. The chart shows each library in its fastest configuration; all
+configurations are in the tables below.
 
 **Read**
 
