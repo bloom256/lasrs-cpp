@@ -131,6 +131,37 @@ Reproduce with [benchmarks/](benchmarks/README.md): `pixi run bench`
 downloads this file and writes the tables, the verification and all written
 files to `test_data/output/bench/`.
 
+## Tested platforms
+
+Every push runs these in [CI](https://github.com/bloom256/lasrs-cpp/actions/workflows/ci.yml):
+
+| Platform | Arch | Compiler | What runs |
+|---|---|---|---|
+| Windows | x64 | MSVC | full test suite (Debug, Release), bundle |
+| Ubuntu 24.04 | x64 | GCC 13, Clang 18 | full test suite (Debug, Release), sanitizers, bundle |
+| Ubuntu 24.04 | arm64 | GCC 13 | full test suite (Debug, Release), bundle |
+| macOS (Apple Silicon) | arm64 | Apple Clang | full test suite (Debug, Release), bundle |
+| macOS (Intel) | x64 | Apple Clang | full test suite (Debug, Release), bundle |
+
+The prebuilt Linux bundles (built on Ubuntu 24.04) are then tested on other
+distributions, on both x64 and arm64:
+
+| Distribution | glibc | Compiler | What runs |
+|---|---|---|---|
+| Rocky Linux 8 | 2.28 | GCC 13 (gcc-toolset) | full test suite, C API test |
+| Ubuntu 20.04 | 2.31 | GCC 9 | C API test |
+| Debian 11 | 2.31 | GCC 10 | C API test |
+| Rocky Linux 9 | 2.34 | GCC 11 | full test suite, C API test |
+| Ubuntu 22.04 | 2.35 | GCC 11 | full test suite, C API test |
+| Debian 12 | 2.36 | GCC 12 | full test suite, C API test |
+| Ubuntu 24.04 | 2.39 | GCC 13 | full test suite, C API test |
+| Fedora (latest) | latest | latest GCC | full test suite, C API test |
+| Arch Linux (x64 only) | latest | latest GCC | full test suite, C API test |
+
+Ubuntu 20.04 and Debian 11 ship compilers without the C++20 library
+features the C++ headers use (`std::chrono` calendar types), so only the C
+API is tested there; the library itself works on them.
+
 ## Mapping from las-rs
 
 Names and semantics follow las-rs. Where Rust and C++ differ:
