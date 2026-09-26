@@ -20,11 +20,13 @@ corrosion_import_crate(
   MANIFEST_PATH ${CMAKE_CURRENT_SOURCE_DIR}/rust/Cargo.toml
   CRATE_TYPES staticlib)
 
-add_library(lasrs INTERFACE)
-add_library(lasrs::lasrs ALIAS lasrs)
-target_include_directories(lasrs INTERFACE
+# lasrs_ffi is the C API (lasrs.h); lasrs adds the C++20 wrapper on top.
+target_include_directories(lasrs_ffi INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+
+add_library(lasrs INTERFACE)
+add_library(lasrs::lasrs ALIAS lasrs)
 target_compile_features(lasrs INTERFACE cxx_std_20)
 target_link_libraries(lasrs INTERFACE lasrs_ffi)
 
