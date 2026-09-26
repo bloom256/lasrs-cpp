@@ -1,0 +1,100 @@
+# Builds and tests the library bundle for every platform. Used by ci.yml and
+# release.yml so both produce identical bundles.
+name: Bundle
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # Platform-independent inputs: third-party notices (cargo-about covers all
+  # targets' crates) and the sample files the las crate ships for the tests.
+  prepare:
+    name: Notices and test data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: .github/scripts/install-rust.sh
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.2
+      - name: Generate
+        working-directory: rust
+        run: cargo about generate about.hbs -o ../THIRD-PARTY-NOTICES.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: third-party-notices
+          path: THIRD-PARTY-NOTICES.txt
+          retention-days: 7
+      - name: Collect the las crate's sample files
+        run: |
+          manifest=$(cargo metadata --format-version 1 --locked --manifest-path rust/Cargo.toml |
+            jq -r '.packages[] | select(.name == "las") | .manifest_path')
+          cp -r "$(dirname "$manifest")/tests/data" test_data
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-data
+          path: test_data
+          retention-days: 7
+
+  bundle:
+    name: Bundle ${{ matrix.name }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: windows-x64, os: windows-latest }
+          - name: windows-x64-static-crt
+            os: windows-latest
+            rustflags: -C target-feature=+crt-static
+            cmake-args: -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+          - { name: linux-x64, os: ubuntu-latest }
+          - { name: linux-arm64, os: ubuntu-24.04-arm }
+          - { name: macos-arm64, os: macos-latest }
+          - { name: macos-x64, os: macos-15-intel }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: .github/scripts/install-rust.sh
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          cache-targets: false
+      - uses: lukka/get-cmake@latest
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+      - name: Use the MSVC linker for Rust
+        if: runner.os == 'Windows'
+        # Git Bash's /usr/bin/link.exe would otherwise shadow MSVC's link.exe.
+        run: echo "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=${VCToolsInstallDir}bin\Hostx64\x64\link.exe" >> "$GITHUB_ENV"
+      - name: Build and install
+        env:
+          RUSTFLAGS: ${{ matrix.rustflags }}
+        run: |
+          cmake --preset release -DLASRS_BUILD_TESTS=OFF -DLASRS_BUILD_EXAMPLES=OFF ${{ matrix.cmake-args }}
+          cmake --build --preset release
+          cmake --install build/release --prefix dist/lasrs-cpp
+      - uses: actions/download-artifact@v4
+        with:
+          name: third-party-notices
+          path: dist/lasrs-cpp/share/lasrs
+      - name: Build programs against the bundle
+        run: |
+          cmake -S tests/package -B build/package -G Ninja -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake-args }} \
+            -DCMAKE_PREFIX_PATH="${{ github.workspace }}/dist/lasrs-cpp"
+          cmake --build build/package
+          ctest --test-dir build/package --output-on-failure
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lasrs-cpp-${{ matrix.name }}
+          path: dist/lasrs-cpp
+          retention-days: 30
