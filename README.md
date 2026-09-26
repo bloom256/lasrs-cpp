@@ -181,10 +181,31 @@ las-rs cannot write COPC, so neither can lasrs-cpp.
 
 ## Getting it
 
-### Prebuilt binaries (no Rust needed)
+### Prebuilt bundles (no Rust needed)
 
-Planned: each release will ship static libraries and headers for common
-platforms, consumable from CMake.
+Each [release](https://github.com/bloom256/lasrs-cpp/releases) has one
+archive per platform; pick the one matching how you build:
+
+| Your build | Download |
+|---|---|
+| Windows x64, MSVC, dynamic CRT (`/MD`, the default) | `lasrs-cpp-vX.Y.Z-windows-x64.zip` |
+| Windows x64, MSVC, static CRT (`/MT`) | `lasrs-cpp-vX.Y.Z-windows-x64-static-crt.zip` |
+| Linux x64, glibc 2.28 or newer | `lasrs-cpp-vX.Y.Z-linux-x64.tar.gz` |
+| Linux arm64, glibc 2.28 or newer | `lasrs-cpp-vX.Y.Z-linux-arm64.tar.gz` |
+| macOS Apple Silicon | `lasrs-cpp-vX.Y.Z-macos-arm64.tar.gz` |
+| macOS Intel | `lasrs-cpp-vX.Y.Z-macos-x64.tar.gz` |
+
+Each archive holds `include/`, the static library in `lib/`, a CMake
+package in `lib/cmake/lasrs/` and the licenses in `share/lasrs/`. Check a
+download against `SHA256SUMS.txt`, or its build provenance with
+`gh attestation verify <archive> --repo bloom256/lasrs-cpp`.
+
+```cmake
+find_package(lasrs REQUIRED)   # configure with -DCMAKE_PREFIX_PATH=<extracted archive>
+target_link_libraries(my_app PRIVATE lasrs::lasrs)
+```
+
+Linking without CMake is described in [docs/BUILDING.md](docs/BUILDING.md).
 
 ### From source (needs Rust)
 

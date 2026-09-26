@@ -71,9 +71,11 @@ No package manager: users take the compiled static library and headers.
       Fedora, Rocky Linux 8/9 and Arch Linux (x64 and arm64)
 - [x] docs: how to link the bundle without CMake (system libraries needed
       per platform)
-- [ ] later, when publishing is wanted: attach every platform's bundle to
-      each GitHub release, with a README table mapping OS/arch to the
-      download; add a /MT (static CRT) Windows variant
+- [x] release workflow on version tags: every platform's bundle (plus a
+      /MT static-CRT Windows variant) attached to the GitHub release, with
+      checksums, provenance and a README table mapping OS/arch to the
+      download; see docs/RELEASING.md
+- [ ] first release
 
 ## M7 - Repository hygiene
 
