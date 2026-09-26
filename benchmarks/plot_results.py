@@ -2,8 +2,8 @@
 """Draws the README benchmark chart from a results.md written by run_bench.py.
 
 Usage: python plot_results.py <results.md> <output dir>
-Writes benchmark-light.svg and benchmark-dark.svg (read and write time per
-library, each library in its fastest configuration, lasrs-cpp highlighted)
+Writes benchmark-light.svg and benchmark-dark.svg (read and write times of
+the C++ choices, lasrs-cpp highlighted)
 and social-preview.png, the 1280x640 card for GitHub's social preview.
 """
 
@@ -30,8 +30,12 @@ THEMES = {
 ROW = re.compile(r"^\| (?P<library>[^|]+) \| (?P<threads>[^|]+) \| (?P<seconds>[\d.]+) \|")
 
 
-def fastest_per_library(results: str) -> dict:
-    """Maps "Read"/"Write" to [(label, seconds)] sorted fastest first."""
+def chart_rows(results: str) -> dict:
+    """Maps "Read"/"Write" to [(label, seconds)] sorted fastest first.
+
+    A library appears with all its multi-threaded configurations, or with
+    its single-threaded one if that is all it has.
+    """
     tables, section = {}, None
     for line in results.splitlines():
         heading = re.match(r"^\*\*(Read|Write)\*\*$", line)
@@ -42,11 +46,16 @@ def fastest_per_library(results: str) -> dict:
         row = ROW.match(line)
         if section and row:
             library, threads, seconds = row["library"].strip(), row["threads"].strip(), float(row["seconds"])
-            if library.startswith(TABLES_ONLY):
-                continue
-            if library not in tables[section] or seconds < tables[section][library][1]:
-                tables[section][library] = (f"{library}, {threads}", seconds)
-    return {name: sorted(rows.values(), key=lambda row: row[1]) for name, rows in tables.items()}
+            if not library.startswith(TABLES_ONLY):
+                tables[section].setdefault(library, []).append((f"{library}, {threads}", seconds, threads))
+    charts = {}
+    for name, libraries in tables.items():
+        rows = []
+        for configurations in libraries.values():
+            parallel = [c for c in configurations if c[2] != "1 thread"]
+            rows += [(label, seconds) for label, seconds, _ in (parallel or configurations)]
+        charts[name] = sorted(rows, key=lambda row: row[1])
+    return charts
 
 
 def draw(tables: dict, theme: dict, output: Path, background: str | None = None) -> None:
@@ -111,7 +120,7 @@ def draw_social(tables: dict, theme: dict, output: Path) -> None:
 
 def main() -> None:
     results, output_dir = Path(sys.argv[1]), Path(sys.argv[2])
-    tables = fastest_per_library(results.read_text())
+    tables = chart_rows(results.read_text())
     output_dir.mkdir(parents=True, exist_ok=True)
     for mode, theme in THEMES.items():
         draw(tables, theme, output_dir / f"benchmark-{mode}.svg")

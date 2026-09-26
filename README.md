@@ -24,7 +24,7 @@ than LASzip and 7.9x faster than PDAL (see [Performance](#performance)).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/benchmark-dark.svg">
-  <img alt="Read and write times: lasrs-cpp 11.5 s read and 9.8 s write, PDAL 41.2 s and 77.9 s, LASzip 65.6 s and 42.2 s" src="docs/images/benchmark-light.svg">
+  <img alt="Read: lasrs-cpp 11.5 s, PDAL 41.2 s (7 threads) and 43.1 s (12 threads), LASzip 65.6 s. Write: lasrs-cpp 9.8 s, LASzip 42.2 s, PDAL 77.9 s" src="docs/images/benchmark-light.svg">
 </picture>
 
 ## Features
@@ -95,8 +95,8 @@ AHN4 tile 25GN2_18 (Amsterdam, public domain): 105.6 million points, LAS 1.4
 point format 8, 952 MB. Intel Core i7-10750H (6 cores, 12 threads), 32 GB,
 Windows 11; best of 3 runs, each case in its own process, file in the OS
 cache. The chart at the top compares the C++ options (lasrs-cpp, PDAL,
-LASzip), each in its fastest configuration; the tables below have every
-configuration, plus laz-perf (the codec inside PDAL) and laspy for
+LASzip) in their multi-threaded configurations; the tables below have
+every configuration, plus laz-perf (the codec inside PDAL) and laspy for
 reference.
 
 **Read**
