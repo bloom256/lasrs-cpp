@@ -183,8 +183,45 @@ las-rs cannot write COPC, so neither can lasrs-cpp.
 
 ### Prebuilt bundles (no Rust needed)
 
-Each [release](https://github.com/bloom256/lasrs-cpp/releases) has one
-archive per platform; pick the one matching how you build:
+Let CMake download the bundle for your platform from the
+[releases](https://github.com/bloom256/lasrs-cpp/releases):
+
+```cmake
+set(LASRS_VERSION v0.1.0)
+if(WIN32)
+  set(lasrs_platform windows-x64)
+  if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "^MultiThreaded(Debug)?$")
+    set(lasrs_platform windows-x64-static-crt)
+  endif()
+  set(lasrs_archive zip)
+else()
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+    set(lasrs_arch arm64)
+  else()
+    set(lasrs_arch x64)
+  endif()
+  if(APPLE)
+    set(lasrs_platform macos-${lasrs_arch})
+  else()
+    set(lasrs_platform linux-${lasrs_arch})
+  endif()
+  set(lasrs_archive tar.gz)
+endif()
+
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)
+endif()
+include(FetchContent)
+FetchContent_Declare(lasrs
+  URL https://github.com/bloom256/lasrs-cpp/releases/download/${LASRS_VERSION}/lasrs-cpp-${LASRS_VERSION}-${lasrs_platform}.${lasrs_archive})
+FetchContent_MakeAvailable(lasrs)
+find_package(lasrs CONFIG REQUIRED PATHS ${lasrs_SOURCE_DIR} NO_DEFAULT_PATH)
+
+target_link_libraries(my_app PRIVATE lasrs::lasrs)
+```
+
+Or download an archive yourself and point CMake at it with
+`-DCMAKE_PREFIX_PATH=<extracted archive>` and `find_package(lasrs REQUIRED)`:
 
 | Your build | Download |
 |---|---|
@@ -198,14 +235,8 @@ archive per platform; pick the one matching how you build:
 Each archive holds `include/`, the static library in `lib/`, a CMake
 package in `lib/cmake/lasrs/` and the licenses in `share/lasrs/`. Check a
 download against `SHA256SUMS.txt`, or its build provenance with
-`gh attestation verify <archive> --repo bloom256/lasrs-cpp`.
-
-```cmake
-find_package(lasrs REQUIRED)   # configure with -DCMAKE_PREFIX_PATH=<extracted archive>
-target_link_libraries(my_app PRIVATE lasrs::lasrs)
-```
-
-Linking without CMake is described in [docs/BUILDING.md](docs/BUILDING.md).
+`gh attestation verify <archive> --repo bloom256/lasrs-cpp`. Linking
+without CMake is described in [docs/BUILDING.md](docs/BUILDING.md).
 
 ### From source (needs Rust)
 
