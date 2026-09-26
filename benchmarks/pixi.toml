@@ -16,6 +16,8 @@ pdal = "2.10.*"
 psutil = "*"
 python = "3.12.*"
 rust = "1.98.*"
+matplotlib = ">=3.9"
+py-cpuinfo = ">=9"
 
 [target.linux-64.dependencies]
 cxx-compiler = "*"

@@ -7,12 +7,15 @@ The tables, the verification and all written files go to
 test_data/output/bench/<input name>/ (results.md).
 """
 
+import platform
 import subprocess
 import sys
 from pathlib import Path
 
+import cpuinfo
 import fetch_data
 import laspy
+import psutil
 
 ROOT = Path(__file__).resolve().parent.parent
 BENCH = ROOT / "build" / "bench" / "lasrs_bench"
@@ -22,6 +25,14 @@ TABLE_HEADER = (
     "| Library | Threads | Seconds | Million points/s | Peak memory (MB) |\n"
     "|---|---|---:|---:|---:|"
 )
+
+
+def machine() -> str:
+    return (
+        f"{cpuinfo.get_cpu_info()['brand_raw']}, {psutil.cpu_count(logical=False)} cores / "
+        f"{psutil.cpu_count()} threads, {psutil.virtual_memory().total / 2**30:.0f} GB RAM, "
+        f"{platform.system()} {platform.release()} ({platform.version()})"
+    )
 
 
 def run_cases(program: list, arguments: list) -> list:
@@ -72,7 +83,8 @@ def main() -> None:
     header = laspy.open(path).header
     title = (
         f"{path.name}: {header.point_count:,} points, point format {header.point_format.id}, "
-        f"{path.stat().st_size / 2**20:,.0f} MB, best of {runs} runs"
+        f"{path.stat().st_size / 2**20:,.0f} MB, best of {runs} runs\n\n"
+        f"Machine: {machine()}"
     )
     print(title, flush=True)
     arguments = [str(path), str(output_dir), runs]
