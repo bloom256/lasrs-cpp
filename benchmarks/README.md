@@ -10,8 +10,11 @@ Compares lasrs-cpp with other LAS/LAZ libraries on one LAZ file:
 | PDAL | `readers.las` streaming into a counter (uses laz-perf), default and all threads |
 | laspy + lazrs | `laspy.read` / `write` with the `lazrs` backend, parallel and single-threaded |
 
-Each case is run several times and the best time is reported, as a
-Markdown table ready for the main README.
+Each case is run several times, one after another, and the best time is
+reported as a Markdown table ready for the main README. Write benchmarks
+start from points already in memory in each library's own representation;
+that input is loaded outside the timer and freed after each benchmark, and
+every written file is checked to be valid LAZ with all points.
 
 ## Running
 
