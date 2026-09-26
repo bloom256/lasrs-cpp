@@ -8,8 +8,9 @@ Fast LAS / LAZ / COPC reading and writing for C++, powered by the Rust
 crate [las-rs](https://github.com/gadomski/las-rs) and its parallel LAZ
 codec [laz-rs](https://github.com/tmontaigu/laz-rs).
 
-> Status: early development. The API mirrors las-rs 0.11 but is not
-> stable yet.
+> **v0.1:** the complete las-rs 0.11 API, tested on Windows, Linux and
+> macOS (x64 and arm64), with prebuilt releases. As usual for 0.x
+> versions, the API may still change between minor releases.
 
 ## Why
 
