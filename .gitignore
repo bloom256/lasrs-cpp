@@ -20,3 +20,6 @@ CMakeUserPresets.json
 
 # pixi environments
 .pixi/
+
+# Python
+__pycache__/
