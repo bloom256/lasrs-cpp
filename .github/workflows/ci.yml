@@ -55,6 +55,15 @@ jobs:
         run: cmake --build --preset ${{ matrix.preset }}
       - name: Test
         run: ctest --preset ${{ matrix.preset }}
+      - name: Keep the sample test data for the distro tests
+        if: matrix.config.name == 'Linux GCC' && matrix.preset == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-data
+          path: |
+            test_data
+            !test_data/output
+          retention-days: 7
 
   bundle:
     name: Bundle ${{ matrix.name }}
@@ -101,6 +110,59 @@ jobs:
           name: lasrs-cpp-${{ matrix.name }}
           path: dist/lasrs-cpp
           retention-days: 30
+
+  # Runs the prebuilt Linux bundles on other distros: the full test suite
+  # where the default compiler supports C++20, the C API test everywhere.
+  linux-distros:
+    name: ${{ matrix.image }} ${{ matrix.arch }}
+    needs: [build, bundle]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x64, arm64]
+        image:
+          - ubuntu:20.04
+          - ubuntu:22.04
+          - ubuntu:24.04
+          - debian:11
+          - debian:12
+          - fedora:latest
+          - rockylinux/rockylinux:8
+          - rockylinux/rockylinux:9
+          - archlinux:latest
+        exclude:
+          - { arch: arm64, image: "archlinux:latest" }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install compiler
+        id: deps
+        run: bash .github/scripts/install-distro-deps.sh
+      - uses: actions/download-artifact@v4
+        with:
+          name: lasrs-cpp-linux-${{ matrix.arch }}
+          path: bundle
+      - uses: actions/download-artifact@v4
+        with:
+          name: test-data
+          path: test_data
+      - name: C API test
+        run: |
+          ${CC:-cc} -std=c99 -Wall -Wextra -I bundle/include tests/package/c_smoke.c bundle/lib/liblasrs_ffi.a             -lgcc_s -lutil -lrt -lpthread -lm -ldl -o c_smoke
+          ./c_smoke c_smoke.laz
+      - name: Test suite against the bundle
+        if: steps.deps.outputs.suite == 'full'
+        run: |
+          cmake -S tests -B build/tests -DCMAKE_BUILD_TYPE=Release             -DCMAKE_PREFIX_PATH="$PWD/bundle" -DLASRS_TEST_DATA_DIR="$PWD/test_data"
+          cmake --build build/tests --parallel
+          ctest --test-dir build/tests --output-on-failure
+      - name: Package test
+        if: steps.deps.outputs.suite == 'full'
+        run: |
+          cmake -S tests/package -B build/package -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/bundle"
+          cmake --build build/package
+          ctest --test-dir build/package --output-on-failure
 
   sanitizers:
     name: Linux sanitizers
