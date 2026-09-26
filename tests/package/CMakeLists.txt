@@ -10,3 +10,7 @@ target_link_libraries(package_test PRIVATE lasrs::lasrs)
 
 enable_testing()
 add_test(NAME package_test COMMAND package_test)
+
+add_executable(c_smoke c_smoke.c)
+target_link_libraries(c_smoke PRIVATE lasrs::lasrs_ffi)
+add_test(NAME c_smoke COMMAND c_smoke ${CMAKE_CURRENT_BINARY_DIR}/c_smoke.laz)
