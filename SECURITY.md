@@ -2,8 +2,7 @@
 
 ## Supported versions
 
-lasrs-cpp is in early development; only the latest commit on `main` is
-supported.
+Security fixes go into the latest release and `main`.
 
 ## Reporting a vulnerability
 
