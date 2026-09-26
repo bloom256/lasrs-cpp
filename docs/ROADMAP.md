@@ -75,7 +75,7 @@ No package manager: users take the compiled static library and headers.
       /MT static-CRT Windows variant) attached to the GitHub release, with
       checksums, provenance and a README table mapping OS/arch to the
       download; see docs/RELEASING.md
-- [ ] first release
+- [x] first release: v0.1.0 (2026-09-26)
 
 ## M7 - Repository hygiene
 
