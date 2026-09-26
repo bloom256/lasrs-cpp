@@ -28,7 +28,7 @@ Scope: everything las-rs 0.11 offers, mirrored in C++; nothing more.
       `Transform`, `Bounds`, `Vector`, `Color`, `Version`, `Vlr`,
       `raw::point::Waveform`
 - [x] WKT CRS: `set_wkt_crs`, `get_wkt_crs_bytes`, `remove_crs_vlrs`
-- [ ] GeoTIFF CRS: `get_geotiff_crs`
+- [x] GeoTIFF CRS: `get_geotiff_crs`, `crs::GeoTiffCrs`
 
 ## M3 - Write
 

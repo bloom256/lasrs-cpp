@@ -43,7 +43,8 @@ Translation rules:
 | `&str`, `&[u8]` borrowed from an object | `std::string_view`, `std::span` (valid while the object lives) |
 | `String`, `Vec<u8>` fields | `std::string`, `std::vector<uint8_t>` |
 | lazy iterators | `std::vector` |
-| enum with data (`LodSelection::Level(2)`) | class with static factories (`LodSelection::Level(2)`) |
+| enum with data used as an argument (`LodSelection::Level(2)`) | class with static factories (`LodSelection::Level(2)`) |
+| enum with data used as a value (`GeoTiffData`) | `std::variant` |
 | method on a data-less enum | free function in the same namespace |
 | `impl Read + Seek`, `impl Write + Seek` | `std::istream&`, `std::ostream&` (must outlive the object) |
 | `NaiveDate`, `Uuid` | `std::chrono::year_month_day`, `std::array<uint8_t, 16>` |

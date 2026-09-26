@@ -28,7 +28,7 @@ than LASzip and 7.9x faster than PDAL (see [Performance](#performance)).
 - LAS 1.0 - 1.4, point formats 0 - 10, extra bytes, waveform fields
 - LAZ read and write, parallel over chunks
 - COPC read: hierarchy access, level-of-detail and bounds queries
-- Header, VLR / EVLR, WKT CRS
+- Header, VLR / EVLR, CRS (WKT, GeoTIFF keys)
 - Bulk access: read points in batches, as `Point` structs, as columns
   (`x()`, `intensity()`, ...) or as raw record bytes
 - Read from paths or any `std::istream`, write to paths or any
