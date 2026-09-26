@@ -11,11 +11,13 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)
+endif()
 include(FetchContent)
 FetchContent_Declare(Catch2
   URL https://github.com/catchorg/Catch2/archive/refs/tags/v3.16.0.tar.gz
-  URL_HASH SHA256=0957cae5821b17ce07f0833aaa52b5137643a8382203221f363a8303c109af34
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+  URL_HASH SHA256=0957cae5821b17ce07f0833aaa52b5137643a8382203221f363a8303c109af34)
 FetchContent_MakeAvailable(Catch2)
 
 set(LASRS_TEST_DATA_DIR "" CACHE PATH "Directory with the las crate's sample files; found through cargo if empty")
