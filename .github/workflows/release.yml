@@ -1,0 +1,84 @@
+# Publishes a GitHub release with every platform's bundle when a version tag
+# (v1.2.3) is pushed.
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    name: Check version and changelog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches the project versions
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          cmake_version=$(sed -n 's/^  VERSION \([0-9.]*\)$/\1/p' CMakeLists.txt)
+          cargo_version=$(sed -n 's/^version = "\(.*\)"$/\1/p' rust/Cargo.toml)
+          if [ "$version" != "$cmake_version" ] || [ "$version" != "$cargo_version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME, CMakeLists.txt $cmake_version, rust/Cargo.toml $cargo_version"
+            exit 1
+          fi
+      - name: Changelog has a section for the version
+        run: grep -q "^## \[${GITHUB_REF_NAME#v}\]" CHANGELOG.md
+
+  bundle:
+    needs: check
+    uses: ./.github/workflows/bundle.yml
+
+  release:
+    name: Publish
+    needs: bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: lasrs-cpp-*
+          path: dist
+      - name: Package
+        working-directory: dist
+        run: |
+          for bundle in lasrs-cpp-*/; do
+            platform=${bundle#lasrs-cpp-}
+            platform=${platform%/}
+            name="lasrs-cpp-$GITHUB_REF_NAME-$platform"
+            mv "$bundle" "$name"
+            if [[ $platform == windows-* ]]; then
+              zip -qr "$name.zip" "$name"
+            else
+              tar -czf "$name.tar.gz" "$name"
+            fi
+          done
+          sha256sum *.zip *.tar.gz > SHA256SUMS.txt
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/*.zip
+            dist/*.tar.gz
+      - name: Release notes from the changelog
+        run: |
+          awk -v header="## [${GITHUB_REF_NAME#v}]" '
+            index($0, header) == 1 { found = 1; next }
+            found && index($0, "## [") == 1 { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.zip dist/*.tar.gz dist/SHA256SUMS.txt \
+            --title "lasrs-cpp $GITHUB_REF_NAME" --notes-file notes.md --verify-tag
