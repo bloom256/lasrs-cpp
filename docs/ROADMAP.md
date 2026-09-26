@@ -61,14 +61,16 @@ Scope: everything las-rs 0.11 offers, mirrored in C++; nothing more.
 
 No package manager: users take the compiled static library and headers.
 
-- [ ] CMake install rules: `include/lasrs/*`, the static library, and a
+- [x] CMake install rules: `include/lasrs/*`, the static library, and a
       CMake package config (`find_package(lasrs)`) for convenience
-- [ ] `THIRD-PARTY-NOTICES` (`cargo about`) and LICENSE files in the bundle
+- [x] `THIRD-PARTY-NOTICES` (`cargo about`) and LICENSE files in the bundle
+- [x] CI builds the bundle for windows-x64, linux-x64 and macos-arm64,
+      tests it with a separate program and keeps it as a workflow
+      artifact for 30 days (not published)
 - [ ] docs: how to link the bundle without CMake (system libraries needed
       per platform)
-- [ ] later, when publishing is wanted: CI builds the bundle per platform
-      (x64-windows /MD and /MT, x64-linux, arm64-macos) and attaches it to
-      GitHub releases
+- [ ] later, when publishing is wanted: attach the bundles to GitHub
+      releases; add a /MT (static CRT) Windows variant
 
 ## M7 - Repository hygiene
 

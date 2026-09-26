@@ -54,6 +54,50 @@ jobs:
       - name: Test
         run: ctest --preset ${{ matrix.preset }}
 
+  bundle:
+    name: Bundle ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: windows-x64, os: windows-latest }
+          - { name: linux-x64, os: ubuntu-latest }
+          - { name: macos-arm64, os: macos-latest }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: .github/scripts/install-rust.sh
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          cache-targets: false
+      - uses: lukka/get-cmake@latest
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about@0.9.2
+      - name: Build and install
+        run: |
+          cmake --preset release -DLASRS_BUILD_TESTS=OFF -DLASRS_BUILD_EXAMPLES=OFF
+          cmake --build --preset release
+          cmake --install build/release --prefix dist/lasrs-cpp
+      - name: Third-party notices
+        working-directory: rust
+        run: cargo about generate about.hbs -o ../dist/lasrs-cpp/share/lasrs/THIRD-PARTY-NOTICES.txt
+      - name: Build a program against the bundle
+        run: |
+          cmake -S tests/package -B build/package -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${{ github.workspace }}/dist/lasrs-cpp"
+          cmake --build build/package
+          ctest --test-dir build/package --output-on-failure
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lasrs-cpp-${{ matrix.name }}
+          path: dist/lasrs-cpp
+          retention-days: 30
+
   sanitizers:
     name: Linux sanitizers
     runs-on: ubuntu-latest
