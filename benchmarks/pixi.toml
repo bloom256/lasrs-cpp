@@ -1,0 +1,35 @@
+[workspace]
+name = "lasrs-benchmarks"
+description = "Benchmarks comparing lasrs-cpp with LASzip, laz-perf, PDAL and laspy"
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "osx-arm64"]
+
+[dependencies]
+benchmark = "1.9.*"
+cmake = ">=3.22"
+laspy = "2.7.*"
+laszip = "3.4.*"
+laz-perf = "3.4.*"
+lazrs-python = "0.8.*"
+ninja = "*"
+pdal = "2.10.*"
+python = "3.12.*"
+rust = "1.98.*"
+
+[target.linux-64.dependencies]
+cxx-compiler = "*"
+
+[target.osx-arm64.dependencies]
+cxx-compiler = "*"
+
+[tasks]
+configure = "cmake -S . -B ../build/bench -G Ninja -DCMAKE_BUILD_TYPE=Release"
+build = { cmd = "cmake --build ../build/bench", depends-on = ["configure"] }
+
+[tasks.bench]
+args = [
+  { arg = "file", default = "../test_data/reel_0005_20250821-165617_pointcloud.laz" },
+  { arg = "runs", default = "3" },
+]
+cmd = "../build/bench/lasrs_bench {{ file }} {{ runs }} && python bench_laspy.py {{ file }} {{ runs }}"
+depends-on = ["build"]
