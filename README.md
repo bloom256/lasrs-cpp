@@ -17,10 +17,9 @@ las-rs decompresses LAZ chunks in parallel on all cores. lasrs-cpp brings
 that speed to C++ without re-implementing the codec: the Rust crates sit
 behind a small C ABI and a modern C++20 API.
 
-On a real-world 502 MB LAZ file with 37.6 million points lasrs-cpp reads
-about 3.2x faster than PDAL and 7.7x faster than LASzip, and writes it
-about 4x faster than LASzip and 5.8x faster than PDAL (see
-[Performance](#performance)).
+On a public 952 MB LAZ file with 105.6 million points, lasrs-cpp reads
+3.6x faster than PDAL and 5.7x faster than LASzip, and writes 4.3x faster
+than LASzip and 7.9x faster than PDAL (see [Performance](#performance)).
 
 ## Features
 
@@ -86,23 +85,51 @@ auto points = reader.query(las::LodSelection::Resolution(1.0), las::BoundsSelect
 
 ## Performance
 
-Reading and writing a 502 MB LAZ file (37.6 million points, point format 1)
-on an Intel Core i7-10750H (6 cores, 12 threads), Windows 11, best of 3 runs
-with the file in the OS cache:
+AHN4 tile 25GN2_18 (Amsterdam, public domain): 105.6 million points, LAS 1.4
+point format 8, 952 MB. Intel Core i7-10750H (6 cores, 12 threads), 32 GB,
+Windows 11; best of 3 runs, each case in its own process, file in the OS
+cache.
 
-| Library | Read | Write |
-|---|---:|---:|
-| **lasrs-cpp, 12 threads** | **3.5 s** (10.8 M points/s) | **3.0 s** (12.6 M points/s) |
-| lasrs-cpp, 1 thread | 20.6 s (1.8 M points/s) | 10.7 s (3.5 M points/s) |
-| PDAL 2.10 (laz-perf), 7 threads (default) | 11.2 s (3.4 M points/s) | 17.4 s (2.2 M points/s), 1 thread |
-| laz-perf 3.4, 1 thread | 19.7 s (1.9 M points/s) | 12.7 s (3.0 M points/s) |
-| LASzip 3.4 (used by liblas, LAStools), 1 thread | 26.8 s (1.4 M points/s) | 11.9 s (3.2 M points/s) |
-| laspy 2.7 + lazrs, 12 threads | 3.6 s (10.4 M points/s) | 3.5 s (10.7 M points/s) |
+**Read**
 
-PDAL does not get faster with more threads on this file (13.0 s with 12);
-its LAS writer is single-threaded. Write times start from points already
-in memory in each library's own representation.
-Reproduce with [benchmarks/](benchmarks/README.md).
+| Library | Threads | Seconds | Million points/s | Peak memory (MB) |
+|---|---|---:|---:|---:|
+| **lasrs-cpp** | **12** | **11.5** | **9.2** | 99 |
+| laspy 2.7 + lazrs | 12 | 12.6 | 8.4 | 139 |
+| PDAL 2.10 | 7 (default) | 41.2 | 2.6 | 84 |
+| PDAL 2.10 | 12 | 43.1 | 2.5 | 126 |
+| laz-perf 3.4 | 1 | 63.6 | 1.7 | 16 |
+| LASzip 3.4 | 1 | 65.6 | 1.6 | 1 |
+| lasrs-cpp | 1 | 66.0 | 1.6 | 47 |
+| PDAL 2.10 | 1 | 67.1 | 1.6 | 33 |
+| laspy 2.7 + lazrs | 1 | 67.6 | 1.6 | 89 |
+
+**Write**
+
+| Library | Threads | Seconds | Million points/s | Peak memory (MB) |
+|---|---|---:|---:|---:|
+| **lasrs-cpp** | **12** | **9.8** | **10.8** | 89 |
+| laspy 2.7 + lazrs | 12 | 10.9 | 9.7 | 84 |
+| lasrs-cpp | 1 | 39.3 | 2.7 | 0 |
+| laspy 2.7 + lazrs | 1 | 41.7 | 2.5 | 0 |
+| LASzip 3.4 | 1 | 42.2 | 2.5 | 136 |
+| laz-perf 3.4 | 1 | 46.8 | 2.3 | 0 |
+| PDAL 2.10 | 1 | 77.9 | 1.4 | 10 |
+
+- Single-threaded, all LAZ codecs are about equally fast; lasrs-cpp wins by
+  using all cores.
+- Parallel decoding costs memory: about 100 MB instead of 47 MB for
+  lasrs-cpp, because several LAZ chunks are decompressed at once. Reads
+  stream in 1M-point batches, so memory does not grow with the file.
+- Peak memory is how much the process grew during the timed operation;
+  write benchmarks get their input points already in memory, which is not
+  counted.
+- Every written file was checked to hold exactly the input points. PDAL's
+  writer drops extra bytes by default; its standard fields are identical.
+
+Reproduce with [benchmarks/](benchmarks/README.md): `pixi run bench`
+downloads this file and writes the tables, the verification and all written
+files to `test_data/output/bench/`.
 
 ## Mapping from las-rs
 
