@@ -17,8 +17,9 @@ las-rs decompresses LAZ chunks in parallel on all cores. lasrs-cpp brings
 that speed to C++ without re-implementing the codec: the Rust crates sit
 behind a small C ABI and a modern C++20 API.
 
-For example, a 502 MB LAZ file with 37.6 million points is read in about
-3.4 seconds on a 12-thread desktop.
+On a real-world 502 MB LAZ file with 37.6 million points lasrs-cpp reads
+about 3.3x faster than PDAL and 7.5x faster than LASzip (see
+[Performance](#performance)).
 
 ## Features
 
@@ -81,6 +82,25 @@ auto reader = las::CopcReader::from_path("cloud.copc.laz");
 const las::Bounds area{{637000, 851000, 0}, {638000, 852000, 1000}};
 auto points = reader.query(las::LodSelection::Resolution(1.0), las::BoundsSelection::Within(area));
 ```
+
+## Performance
+
+Reading and writing a 502 MB LAZ file (37.6 million points, point format 1)
+on an Intel Core i7-10750H (6 cores, 12 threads), Windows 11, best of 3 runs
+with the file in the OS cache:
+
+| Library | Read | Write |
+|---|---:|---:|
+| **lasrs-cpp, 12 threads** | **3.6 s** (10.5 M points/s) | **3.1 s** (12.2 M points/s) |
+| lasrs-cpp, 1 thread | 21.0 s (1.8 M points/s) | 10.7 s (3.5 M points/s) |
+| PDAL 2.10 (laz-perf), 7 threads (default) | 11.9 s (3.2 M points/s) | - |
+| laz-perf 3.4, 1 thread | 19.7 s (1.9 M points/s) | 12.6 s (3.0 M points/s) |
+| LASzip 3.4 (used by liblas, LAStools), 1 thread | 26.9 s (1.4 M points/s) | - |
+| laspy 2.7 + lazrs, 12 threads | 3.9 s (9.7 M points/s) | 2.9 s (12.8 M points/s) |
+
+PDAL does not get faster with more threads on this file (12.3 s with 12).
+Write numbers are only measured where the library can write raw records.
+Reproduce with [benchmarks/](benchmarks/README.md).
 
 ## Mapping from las-rs
 
