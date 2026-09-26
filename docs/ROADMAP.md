@@ -78,10 +78,10 @@ No package manager: users take the compiled static library and headers.
 ## M7 - Repository hygiene
 
 - [ ] branch protection on `main`: PRs required, CI must pass
-- [ ] Dependabot for GitHub Actions and Cargo dependencies
-- [ ] CodeQL code scanning
-- [ ] issue templates, pull request template
-- [ ] SECURITY.md, CODE_OF_CONDUCT.md
+- [x] Dependabot for GitHub Actions and Cargo dependencies
+- [x] CodeQL code scanning (C/C++, Rust, workflows)
+- [x] issue templates, pull request template
+- [x] SECURITY.md, CODE_OF_CONDUCT.md
 
 ## Out of scope
 

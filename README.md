@@ -206,8 +206,10 @@ See [docs/BUILDING.md](docs/BUILDING.md) for the toolchain.
 - Formatting (cargo fmt, clang-format), linting (clippy), a check that
   the committed C header is up to date, license checks (cargo deny) and
   sanitizers run in CI.
-- Planned: automated releases from version tags, Dependabot, CodeQL and
-  a protected `main` branch.
+- Dependabot keeps GitHub Actions and Rust dependencies up to date; CodeQL
+  scans the C/C++, Rust and workflow code.
+- Security issues: see [SECURITY.md](SECURITY.md); community rules:
+  [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 - Semantic versioning and a human-readable [CHANGELOG](CHANGELOG.md).
 
 ## Documentation
