@@ -22,6 +22,11 @@ On a public 952 MB LAZ file with 105.6 million points, lasrs-cpp reads
 3.6x faster than PDAL and 5.7x faster than LASzip, and writes 4.3x faster
 than LASzip and 7.9x faster than PDAL (see [Performance](#performance)).
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/benchmark-dark.svg">
+  <img alt="Read and write times: lasrs-cpp 11.5 s read and 9.8 s write, PDAL 41.2 s and 77.9 s, LASzip 65.6 s and 42.2 s" src="docs/images/benchmark-light.svg">
+</picture>
+
 ## Features
 
 - The las-rs API in C++, with the same names: if you know las-rs, you
@@ -86,16 +91,11 @@ auto points = reader.query(las::LodSelection::Resolution(1.0), las::BoundsSelect
 
 ## Performance
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/benchmark-dark.svg">
-  <img alt="Read and write times: lasrs-cpp 11.5 s read and 9.8 s write, PDAL 41.2 s and 77.9 s, LASzip 65.6 s and 42.2 s" src="docs/images/benchmark-light.svg">
-</picture>
-
 AHN4 tile 25GN2_18 (Amsterdam, public domain): 105.6 million points, LAS 1.4
 point format 8, 952 MB. Intel Core i7-10750H (6 cores, 12 threads), 32 GB,
 Windows 11; best of 3 runs, each case in its own process, file in the OS
-cache. The chart shows each library in its fastest configuration; all
-configurations are in the tables below.
+cache. The chart at the top shows each library in its fastest
+configuration; all configurations are in the tables below.
 
 **Read**
 
