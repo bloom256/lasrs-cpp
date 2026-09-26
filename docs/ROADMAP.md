@@ -67,7 +67,7 @@ No package manager: users take the compiled static library and headers.
 - [x] CI builds the bundle for windows-x64, linux-x64 and macos-arm64,
       tests it with a separate program and keeps it as a workflow
       artifact for 30 days (not published)
-- [ ] docs: how to link the bundle without CMake (system libraries needed
+- [x] docs: how to link the bundle without CMake (system libraries needed
       per platform)
 - [ ] later, when publishing is wanted: attach the bundles to GitHub
       releases; add a /MT (static CRT) Windows variant
