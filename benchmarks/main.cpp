@@ -1,14 +1,23 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
-// lasrs_bench <input.laz> <output dir> [runs]
-//     Reads and writes the input with several libraries, keeps every written
-//     file in the output directory and writes a Markdown table to stdout and
-//     <output dir>/results.md.
+// lasrs_bench --case <n> <input.laz> <output dir> <runs>
+//     Runs benchmark case n and prints one tab-separated line: library,
+//     operation, seconds, points, peak memory growth in bytes. Exits with 3
+//     when there is no case n. Each case runs in its own process (driven by
+//     run_bench.py) because a process's peak memory never goes down.
 // lasrs_bench --verify <input.laz> <output dir>
 //     Checks that every .laz file in the output directory holds exactly the
 //     input's point records.
 
 #include <laszip/laszip_api.h>
+
+#ifdef _WIN32
+#include <windows.h>
+
+#include <psapi.h>
+#else
+#include <sys/resource.h>
+#endif
 
 #include <algorithm>
 #include <cctype>
@@ -16,7 +25,6 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
-#include <iomanip>
 #include <iostream>
 #include <lasrs/lasrs.hpp>
 #include <lazperf/readers.hpp>
@@ -28,7 +36,6 @@
 #include <pdal/io/BufferReader.hpp>
 #include <pdal/io/LasReader.hpp>
 #include <pdal/io/LasWriter.hpp>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -44,6 +51,29 @@ struct Measurement
 {
     uint64_t points = 0;
     double seconds = 0.0;
+};
+
+uint64_t peak_memory_bytes()
+{
+#ifdef _WIN32
+    PROCESS_MEMORY_COUNTERS counters{};
+    GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters));
+    return counters.PeakWorkingSetSize;
+#else
+    rusage usage{};
+    getrusage(RUSAGE_SELF, &usage);
+#ifdef __APPLE__
+    return static_cast<uint64_t>(usage.ru_maxrss);
+#else
+    return static_cast<uint64_t>(usage.ru_maxrss) * 1024;
+#endif
+#endif
+}
+
+struct Result
+{
+    Measurement best;
+    uint64_t peak_memory_growth = 0;
 };
 
 using Run = std::function<Measurement()>;
@@ -85,9 +115,12 @@ std::string file_name(const Benchmark &benchmark)
     return name + ".laz";
 }
 
-Measurement best_of(int runs, const Benchmark &benchmark, const fs::path &output, uint64_t expected_points)
+// Peak memory growth is measured from after the input is loaded, so it shows
+// what the timed operation itself needs.
+Result best_of(int runs, const Benchmark &benchmark, const fs::path &output, uint64_t expected_points)
 {
     Run run = benchmark.prepare(output);
+    const uint64_t baseline = peak_memory_bytes();
     Measurement best{0, std::numeric_limits<double>::max()};
     for (int i = 0; i < runs; ++i)
     {
@@ -99,7 +132,7 @@ Measurement best_of(int runs, const Benchmark &benchmark, const fs::path &output
         }
         best = measurement.seconds < best.seconds ? measurement : best;
     }
-    return best;
+    return {best, peak_memory_bytes() - baseline};
 }
 
 uint64_t lasrs_read(const fs::path &path, las::LazParallelism parallelism)
@@ -332,15 +365,7 @@ std::shared_ptr<const las::PointData> load_points(const fs::path &path)
     return std::make_shared<const las::PointData>(las::Reader::from_path(path).read_all());
 }
 
-std::string row(const std::string &library, const std::string &operation, const Measurement &measurement)
-{
-    std::ostringstream out;
-    out << "| " << library << " | " << operation << " | " << std::fixed << std::setprecision(2) << measurement.seconds
-        << " | " << std::setprecision(1) << measurement.points / measurement.seconds / 1e6 << " |\n";
-    return out.str();
-}
-
-int benchmark(const fs::path &input, const fs::path &output_dir, int runs)
+int run_case(size_t index, const fs::path &input, const fs::path &output_dir, int runs)
 {
     const unsigned threads = std::max(1u, std::thread::hardware_concurrency());
     const auto header = las::Reader::from_path(input).header();
@@ -380,23 +405,16 @@ int benchmark(const fs::path &input, const fs::path &output_dir, int runs)
          true},
     };
 
-    fs::create_directories(output_dir);
-    std::ofstream results(output_dir / "results.md");
-    std::ostringstream title;
-    title << input.filename().string() << ": " << count << " points, point format "
-          << int{header.point_format().to_u8()} << ", " << fs::file_size(input) / (1024 * 1024) << " MB, best of "
-          << runs << " runs\n\n"
-          << "| Library | Operation | Seconds | Million points/s |\n"
-          << "|---|---|---:|---:|\n";
-    std::cout << title.str();
-    results << title.str();
-    for (const auto &benchmark : benchmarks)
+    if (index >= benchmarks.size())
     {
-        const auto output = output_dir / (benchmark.writes ? file_name(benchmark) : "unused.laz");
-        const auto line = row(benchmark.library, benchmark.operation, best_of(runs, benchmark, output, count));
-        std::cout << line << std::flush;
-        results << line << std::flush;
+        return 3;
     }
+    const auto &benchmark = benchmarks[index];
+    fs::create_directories(output_dir);
+    const auto output = output_dir / (benchmark.writes ? file_name(benchmark) : "unused.laz");
+    const auto result = best_of(runs, benchmark, output, count);
+    std::cout << benchmark.library << '\t' << benchmark.operation << '\t' << result.best.seconds << '\t'
+              << result.best.points << '\t' << result.peak_memory_growth << '\n';
     return 0;
 }
 
@@ -451,18 +469,13 @@ int verify(const fs::path &input, const fs::path &output_dir)
     }
     std::ranges::sort(outputs);
 
-    std::ofstream results(output_dir / "results.md", std::ios::app);
-    const std::string title = "\n| Written file | Same points as input |\n|---|---|\n";
-    std::cout << title;
-    results << title;
+    std::cout << "| Written file | Same points as input |\n|---|---|\n";
     bool all_same = true;
     for (const auto &output : outputs)
     {
         const auto result = compare(input, output);
         all_same = all_same && result == "yes";
-        const auto line = "| " + output.filename().string() + " | " + result + " |\n";
-        std::cout << line << std::flush;
-        results << line << std::flush;
+        std::cout << "| " << output.filename().string() << " | " << result << " |\n" << std::flush;
     }
     return all_same ? 0 : 1;
 }
@@ -478,11 +491,11 @@ int main(int argc, char **argv)
         {
             return verify(args[1], args[2]);
         }
-        if (args.size() == 2 || args.size() == 3)
+        if (args.size() == 5 && args[0] == "--case")
         {
-            return benchmark(args[0], args[1], args.size() == 3 ? std::stoi(args[2]) : 3);
+            return run_case(std::stoul(args[1]), args[2], args[3], std::stoi(args[4]));
         }
-        std::cerr << "usage: lasrs_bench <input.laz> <output dir> [runs]\n"
+        std::cerr << "usage: lasrs_bench --case <n> <input.laz> <output dir> <runs>\n"
                      "       lasrs_bench --verify <input.laz> <output dir>\n";
         return 2;
     }

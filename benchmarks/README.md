@@ -4,17 +4,11 @@ Compares lasrs-cpp with other LAS/LAZ libraries on one LAZ file:
 
 | Library | How it is measured |
 |---|---|
-| lasrs-cpp | `Reader::fill_points` / `Writer::write_points`, parallel and single-threaded |
-| LASzip | `laszip_read_point` loop (the codec behind liblas, LAStools, CloudCompare) |
+| lasrs-cpp | `Reader::fill_points` (1M-point batches) / `Writer::write_points`, parallel and single-threaded |
+| LASzip | `laszip_read_point` / `laszip_write_point` loops (the codec behind liblas, LAStools, CloudCompare) |
 | laz-perf | `lazperf::reader` / `lazperf::writer` on raw records |
-| PDAL | `readers.las` streaming into a counter (uses laz-perf), default and all threads |
-| laspy + lazrs | `laspy.read` / `write` with the `lazrs` backend, parallel and single-threaded |
-
-Each case is run several times, one after another, and the best time is
-reported as a Markdown table ready for the main README. Write benchmarks
-start from points already in memory in each library's own representation;
-that input is loaded outside the timer and freed after each benchmark, and
-every written file is checked to be valid LAZ with all points.
+| PDAL | `readers.las` streaming, default and all threads; `writers.las` from a `PointView` |
+| laspy + lazrs | `chunk_iterator` (1M-point batches) / `LasData.write`, parallel and single-threaded |
 
 ## Running
 
@@ -24,11 +18,36 @@ build.
 
 ```
 cd benchmarks
-pixi run bench                                   # uses ../test_data/reel_...laz
-pixi run bench path/to/file.laz 5                # other file, 5 runs
+pixi run bench                           # default data, see below
+pixi run bench path/to/file.laz 5        # your own file, 5 runs
 ```
 
 On Windows run it from a "Developer PowerShell for VS" so CMake finds MSVC.
 
-Output files are written to `output/` next to the input file and removed
-afterwards.
+Without a file, the benchmark downloads its default data once into
+`test_data/`: AHN4 tile 25GN2_18 (Amsterdam), 105.6 million points, LAS
+1.4 point format 8, 952 MB. AHN is public domain (CC0); the tile is served
+by [GeoTiles](https://geotiles.citg.tudelft.nl), TU Delft.
+
+## What you get
+
+Everything goes to `test_data/output/bench/<input name>/`:
+
+- `results.md`: the timing table and the verification table
+- one `.laz` per write benchmark, e.g. `lasrs-cpp_write--12-threads.laz`
+
+About 7 output files of roughly the input's size are kept, so plan the
+disk space accordingly.
+
+## Method
+
+- Each benchmark case runs in its own process, several times one after
+  another; the best time is reported.
+- Peak memory is how much the process grew during the timed operation.
+  Write benchmarks get their input points already in memory, in each
+  library's own representation, loaded before the timer starts; that input
+  is not counted. LASzip streams its input in 1M-point batches instead,
+  because one `laszip_point` per point would not fit in RAM.
+- Every written file is decompressed and compared with the input record by
+  record ("Same points as input").
+- The input file is read from the OS cache after the first run.

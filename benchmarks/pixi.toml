@@ -13,6 +13,7 @@ laz-perf = "3.4.*"
 lazrs-python = "0.8.*"
 ninja = "*"
 pdal = "2.10.*"
+psutil = "*"
 python = "3.12.*"
 rust = "1.98.*"
 
