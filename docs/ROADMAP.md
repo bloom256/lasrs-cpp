@@ -64,13 +64,16 @@ No package manager: users take the compiled static library and headers.
 - [x] CMake install rules: `include/lasrs/*`, the static library, and a
       CMake package config (`find_package(lasrs)`) for convenience
 - [x] `THIRD-PARTY-NOTICES` (`cargo about`) and LICENSE files in the bundle
-- [x] CI builds the bundle for windows-x64, linux-x64 and macos-arm64,
-      tests it with a separate program and keeps it as a workflow
-      artifact for 30 days (not published)
+- [x] CI builds the bundle for windows-x64, linux-x64, linux-arm64,
+      macos-arm64 and macos-x64, tests it with separate C and C++ programs
+      and keeps it as a workflow artifact for 30 days (not published)
+- [x] CI tests the Linux bundles on Ubuntu 20.04/22.04/24.04, Debian 11/12,
+      Fedora, Rocky Linux 8/9 and Arch Linux (x64 and arm64)
 - [x] docs: how to link the bundle without CMake (system libraries needed
       per platform)
-- [ ] later, when publishing is wanted: attach the bundles to GitHub
-      releases; add a /MT (static CRT) Windows variant
+- [ ] later, when publishing is wanted: attach every platform's bundle to
+      each GitHub release, with a README table mapping OS/arch to the
+      download; add a /MT (static CRT) Windows variant
 
 ## M7 - Repository hygiene
 
