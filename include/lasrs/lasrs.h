@@ -35,6 +35,12 @@ typedef enum LasrsLodSelectionKind {
   LASRS_LOD_SELECTION_KIND_LEVEL_MIN_MAX = 3,
 } LasrsLodSelectionKind;
 
+typedef enum LasrsGeoTiffDataKind {
+  LASRS_GEO_TIFF_DATA_KIND_U16 = 0,
+  LASRS_GEO_TIFF_DATA_KIND_STRING = 1,
+  LASRS_GEO_TIFF_DATA_KIND_DOUBLES = 2,
+} LasrsGeoTiffDataKind;
+
 typedef enum LasrsLazParallelism {
   LASRS_LAZ_PARALLELISM_YES = 0,
   LASRS_LAZ_PARALLELISM_NO = 1,
@@ -43,6 +49,8 @@ typedef enum LasrsLazParallelism {
 typedef struct LasrsBuilder LasrsBuilder;
 
 typedef struct LasrsCopcReader LasrsCopcReader;
+
+typedef struct LasrsGeoTiffCrs LasrsGeoTiffCrs;
 
 /**
  * Opaque handle; points at a `las::Header`.
@@ -200,6 +208,19 @@ typedef struct LasrsBoundsSelection {
   bool within;
   struct LasrsBounds bounds;
 } LasrsBoundsSelection;
+
+/**
+ * Borrowed view of a `GeoTiffKeyEntry`; only the field matching `kind` is
+ * set, the others are zero.
+ */
+typedef struct LasrsGeoTiffKeyEntry {
+  uint16_t id;
+  enum LasrsGeoTiffDataKind kind;
+  uint16_t u16_value;
+  struct LasrsStr string;
+  const double *doubles;
+  size_t doubles_len;
+} LasrsGeoTiffKeyEntry;
 
 typedef struct LasrsColor {
   uint16_t red;
@@ -370,6 +391,22 @@ enum LasrsStatus lasrs_copc_reader_query(struct LasrsCopcReader *reader,
  * failing call on the same thread.
  */
 struct LasrsStr lasrs_last_error(void);
+
+/**
+ * Writes null to `out` if the header has no GeoTIFF CRS.
+ */
+enum LasrsStatus lasrs_header_get_geotiff_crs(const struct LasrsHeader *header,
+                                              struct LasrsGeoTiffCrs **out);
+
+void lasrs_geotiff_crs_free(struct LasrsGeoTiffCrs *crs);
+
+size_t lasrs_geotiff_crs_entries_len(const struct LasrsGeoTiffCrs *crs);
+
+/**
+ * Borrowed view, valid while the CRS handle is alive.
+ */
+struct LasrsGeoTiffKeyEntry lasrs_geotiff_crs_entry(const struct LasrsGeoTiffCrs *crs,
+                                                    size_t index);
 
 struct LasrsHeader *lasrs_header_default(void);
 

@@ -18,6 +18,7 @@
 mod builder;
 mod copc;
 mod error;
+mod geotiff;
 mod header;
 mod point_data;
 mod reader;
