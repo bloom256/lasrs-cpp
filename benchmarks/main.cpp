@@ -332,7 +332,6 @@ class PdalPoints
         options.add("filename", path.string());
         options.add("compression", true);
         options.add("forward", "all");
-        options.add("extra_dims", "all");
         pdal::LasWriter writer;
         writer.setOptions(options);
         writer.setInput(buffer);
@@ -385,6 +384,7 @@ int run_case(size_t index, const fs::path &input, const fs::path &output_dir, in
         {"lasrs-cpp", "read, 1 thread", without_input([&] { return lasrs_read(input, las::LazParallelism::No); })},
         {"LASzip", "read, 1 thread", without_input([&] { return laszip_read(input); })},
         {"laz-perf", "read, 1 thread", without_input([&] { return lazperf_read(input); })},
+        {"PDAL", "read, 1 thread", without_input([&] { return pdal_read(input, 1); })},
         {"PDAL", "read, 7 threads (default)", without_input([&] { return pdal_read(input, 7); })},
         {"PDAL", "read, " + parallel, without_input([&] { return pdal_read(input, threads); })},
         {"lasrs-cpp", "write, " + parallel, lasrs_writer(las::LazParallelism::Yes), true},
@@ -419,16 +419,22 @@ int run_case(size_t index, const fs::path &input, const fs::path &output_dir, in
 }
 
 // Compares decompressed point records, which is stricter than comparing
-// decoded fields and independent of how each writer chunks the LAZ data.
+// decoded fields and independent of how each writer chunks the LAZ data. The
+// standard fields are compared separately from the extra bytes because some
+// writers do not keep them (PDAL by default).
 std::string compare(const fs::path &input, const fs::path &output)
 {
     auto expected = las::Reader::from_path(input);
     auto actual = las::Reader::from_path(output);
-    if (actual.header().point_format() != expected.header().point_format() ||
+    const auto format = expected.header().point_format();
+    if (actual.header().point_format().to_u8() != format.to_u8() ||
         actual.header().transforms() != expected.header().transforms())
     {
         return "no: different point format or scale/offset";
     }
+    const size_t standard_len = las::point::Format(format.to_u8()).len();
+    const bool same_extra_layout = actual.header().point_format().extra_bytes == format.extra_bytes;
+
     auto expected_points = las::PointDataBuilder().for_header(expected.header()).build();
     auto actual_points = las::PointDataBuilder().for_header(actual.header()).build();
     uint64_t checked = 0;
@@ -441,10 +447,12 @@ std::string compare(const fs::path &input, const fs::path &output)
         }
         const auto a = expected_points.raw_bytes();
         const auto b = actual_points.raw_bytes();
-        const auto record = expected_points.record_len();
-        for (size_t offset = 0; offset < a.size(); offset += record)
+        const size_t compared = same_extra_layout ? expected_points.record_len() : standard_len;
+        for (size_t i = 0; i < n; ++i)
         {
-            differing += !std::equal(a.begin() + offset, a.begin() + offset + record, b.begin() + offset);
+            const auto record_a = a.begin() + i * expected_points.record_len();
+            const auto record_b = b.begin() + i * actual_points.record_len();
+            differing += !std::equal(record_a, record_a + compared, record_b);
         }
         checked += n;
     }
@@ -452,9 +460,13 @@ std::string compare(const fs::path &input, const fs::path &output)
     {
         return "no: more points";
     }
-    return differing == 0
-               ? "yes"
-               : "no: " + std::to_string(differing) + " of " + std::to_string(checked) + " point records differ";
+    if (differing != 0)
+    {
+        return "no: " + std::to_string(differing) + " of " + std::to_string(checked) + " point records differ";
+    }
+    return same_extra_layout ? "yes"
+                             : "yes, standard fields; extra bytes differ (" + std::to_string(format.extra_bytes) +
+                                   " -> " + std::to_string(actual.header().point_format().extra_bytes) + " bytes)";
 }
 
 int verify(const fs::path &input, const fs::path &output_dir)
@@ -474,7 +486,7 @@ int verify(const fs::path &input, const fs::path &output_dir)
     for (const auto &output : outputs)
     {
         const auto result = compare(input, output);
-        all_same = all_same && result == "yes";
+        all_same = all_same && result.starts_with("yes");
         std::cout << "| " << output.filename().string() << " | " << result << " |\n" << std::flush;
     }
     return all_same ? 0 : 1;

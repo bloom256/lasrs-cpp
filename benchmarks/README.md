@@ -7,7 +7,7 @@ Compares lasrs-cpp with other LAS/LAZ libraries on one LAZ file:
 | lasrs-cpp | `Reader::fill_points` (1M-point batches) / `Writer::write_points`, parallel and single-threaded |
 | LASzip | `laszip_read_point` / `laszip_write_point` loops (the codec behind liblas, LAStools, CloudCompare) |
 | laz-perf | `lazperf::reader` / `lazperf::writer` on raw records |
-| PDAL | `readers.las` streaming, default and all threads; `writers.las` from a `PointView` |
+| PDAL | `readers.las` streaming with 1 thread, the default 7 and all threads; `writers.las` (default settings plus `compression`, `forward=all`) from a `PointView` |
 | laspy + lazrs | `chunk_iterator` (1M-point batches) / `LasData.write`, parallel and single-threaded |
 
 ## Running
@@ -49,5 +49,7 @@ disk space accordingly.
   is not counted. LASzip streams its input in 1M-point batches instead,
   because one `laszip_point` per point would not fit in RAM.
 - Every written file is decompressed and compared with the input record by
-  record ("Same points as input").
+  record ("Same points as input"). Standard fields and extra bytes are
+  compared separately: PDAL's default writer does not keep extra bytes.
+- Results are shown as separate read and write tables, fastest first.
 - The input file is read from the OS cache after the first run.
