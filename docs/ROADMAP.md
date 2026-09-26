@@ -79,7 +79,7 @@ No package manager: users take the compiled static library and headers.
 
 ## M7 - Repository hygiene
 
-- [ ] branch protection on `main`: PRs required, CI must pass
+- [x] branch protection on `main` (ruleset "Protect main"): no force-push or deletion; PRs with passing CI required, repo admins may push directly
 - [x] Dependabot for GitHub Actions and Cargo dependencies
 - [x] CodeQL code scanning (C/C++, Rust, workflows)
 - [x] issue templates, pull request template
