@@ -17,6 +17,11 @@
 namespace las
 {
 
+namespace point
+{
+struct Format;
+}
+
 struct Version
 {
     uint8_t major = 1;
@@ -44,6 +49,8 @@ struct Version
         }
         return 375;
     }
+
+    constexpr bool supports_point_format(const point::Format &format) const;
 
     constexpr auto operator<=>(const Version &) const = default;
 };
@@ -217,6 +224,28 @@ struct Format
 };
 
 } // namespace point
+
+constexpr bool Version::supports_point_format(const point::Format &format) const
+{
+    if (major != 1)
+    {
+        return false;
+    }
+    switch (minor)
+    {
+    case 0:
+    case 1:
+        return !(format.has_color || format.is_extended || format.has_waveform || format.has_nir);
+    case 2:
+        return !(format.is_extended || format.has_waveform || format.has_nir);
+    case 3:
+        return !(format.is_extended || format.has_nir);
+    case 4:
+        return true;
+    default:
+        return false;
+    }
+}
 
 namespace raw::point
 {

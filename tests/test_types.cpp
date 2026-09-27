@@ -62,6 +62,31 @@ TEST_CASE("Version knows its header size")
     CHECK(las::Version(1, 2) < las::Version(1, 4));
 }
 
+TEST_CASE("Version::supports_point_format agrees with Builder::into_header")
+{
+    for (const uint8_t minor : {0, 1, 2, 3, 4})
+    {
+        for (uint8_t n = 0; n <= 10; ++n)
+        {
+            las::Builder builder(las::Version(1, minor));
+            builder.point_format = las::point::Format(n);
+            CAPTURE(minor, n);
+            if (builder.version.supports_point_format(builder.point_format))
+            {
+                CHECK_NOTHROW(builder.into_header());
+            }
+            else
+            {
+                CHECK_THROWS_AS(builder.into_header(), las::Error);
+            }
+        }
+    }
+    CHECK(las::Version(1, 2).supports_point_format(las::point::Format(3)));
+    CHECK_FALSE(las::Version(1, 2).supports_point_format(las::point::Format(4)));
+    CHECK_FALSE(las::Version(1, 5).supports_point_format(las::point::Format(0)));
+    CHECK_FALSE(las::Version(2, 0).supports_point_format(las::point::Format(0)));
+}
+
 TEST_CASE("Bounds grow and intersect")
 {
     las::Bounds bounds;
