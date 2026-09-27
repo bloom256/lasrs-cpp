@@ -25,7 +25,7 @@ class LimitedBuffer : public std::stringbuf
   protected:
     std::streamsize xsputn(const char *s, std::streamsize n) override
     {
-        const auto end = pubseekoff(0, std::ios_base::cur, std::ios_base::out) + n;
+        const auto end = std::streamoff(pubseekoff(0, std::ios_base::cur, std::ios_base::out)) + n;
         return end > limit_ ? 0 : std::stringbuf::xsputn(s, n);
     }
 
