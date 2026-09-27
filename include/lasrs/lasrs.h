@@ -680,6 +680,8 @@ uint16_t lasrs_format_len(struct LasrsFormat format);
 
 enum LasrsStatus lasrs_format_to_u8(struct LasrsFormat format, uint8_t *out);
 
+enum LasrsStatus lasrs_classification_new(uint8_t n);
+
 enum LasrsStatus lasrs_transform_inverse(struct LasrsTransform transform, double n, int32_t *out);
 
 enum LasrsStatus lasrs_bounds_adapt(struct LasrsBounds bounds,

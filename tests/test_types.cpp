@@ -45,6 +45,14 @@ TEST_CASE("Format::extend switches to an extended format")
     CHECK(format.to_u8() == 6);
 }
 
+TEST_CASE("new_classification checks the code like Classification::new")
+{
+    CHECK(las::point::new_classification(2) == las::point::Classification::Ground);
+    CHECK(las::point::is_reserved(las::point::new_classification(19)));
+    CHECK(las::point::is_user_definable(las::point::new_classification(255)));
+    CHECK_THROWS_WITH(las::point::new_classification(12), ContainsSubstring("overlap"));
+}
+
 TEST_CASE("Transform converts between raw and scaled values")
 {
     const las::Transform transform{0.01, 100.0};

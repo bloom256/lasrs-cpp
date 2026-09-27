@@ -4,7 +4,10 @@ use crate::{
     error::{LasrsStatus, guard},
     types::{LasrsBounds, LasrsFormat, LasrsTransform, LasrsTransforms},
 };
-use las::{Bounds, Transform, point::Format};
+use las::{
+    Bounds, Transform,
+    point::{Classification, Format},
+};
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lasrs_format_new(n: u8, out: *mut LasrsFormat) -> LasrsStatus {
@@ -25,6 +28,14 @@ pub unsafe extern "C" fn lasrs_format_to_u8(format: LasrsFormat, out: *mut u8) -
     guard(|| {
         let n = Format::from(format).to_u8()?;
         unsafe { out.write(n) };
+        Ok(())
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn lasrs_classification_new(n: u8) -> LasrsStatus {
+    guard(|| {
+        let _ = Classification::new(n)?;
         Ok(())
     })
 }

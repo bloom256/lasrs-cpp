@@ -125,7 +125,8 @@ enum class ScanDirection : uint8_t
 };
 
 // Values 19-63 are reserved and 64-255 user definable; 12 (overlap) is not a
-// valid classification and is rejected when a point is handed to las-rs.
+// valid classification: new_classification rejects it, and so does las-rs
+// when a point carrying it is handed over.
 enum class Classification : uint8_t
 {
     CreatedNeverClassified = 0,
@@ -157,6 +158,13 @@ constexpr bool is_reserved(Classification c)
 constexpr bool is_user_definable(Classification c)
 {
     return static_cast<uint8_t>(c) >= 64;
+}
+
+// Classification::new in las-rs.
+inline Classification new_classification(uint8_t n)
+{
+    detail::check(lasrs_classification_new(n));
+    return static_cast<Classification>(n);
 }
 
 struct Format
