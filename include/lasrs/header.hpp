@@ -265,6 +265,8 @@ class Header
                                  info.spacing,  info.gpstime_minimum, info.gpstime_maximum};
     }
 
+    // Like las-rs, also nullopt when the file has no COPC info VLR or the
+    // hierarchy EVLR cannot be parsed.
     std::optional<copc::CopcHierarchyVlr> copc_hierarchy_evlr() const
     {
         auto *vlr = lasrs_header_copc_hierarchy_evlr(ptr_);
