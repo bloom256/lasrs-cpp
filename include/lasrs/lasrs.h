@@ -242,6 +242,26 @@ typedef struct LasrsGeoTiffKeyEntry {
   size_t doubles_len;
 } LasrsGeoTiffKeyEntry;
 
+/**
+ * Writes all `len` bytes of `buf`. Returns false on error.
+ */
+typedef bool (*LasrsWriteFn)(void *context, const uint8_t *buf, size_t len);
+
+/**
+ * Flushes buffered output. Returns false on error.
+ */
+typedef bool (*LasrsFlushFn)(void *context);
+
+/**
+ * A caller-implemented output stream, same rules as [`LasrsInputStream`].
+ */
+typedef struct LasrsOutputStream {
+  void *context;
+  LasrsWriteFn write;
+  LasrsSeekFn seek;
+  LasrsFlushFn flush;
+} LasrsOutputStream;
+
 typedef struct LasrsColor {
   uint16_t red;
   uint16_t green;
@@ -303,26 +323,6 @@ typedef struct LasrsCopcInfoVlr {
   double gpstime_minimum;
   double gpstime_maximum;
 } LasrsCopcInfoVlr;
-
-/**
- * Writes all `len` bytes of `buf`. Returns false on error.
- */
-typedef bool (*LasrsWriteFn)(void *context, const uint8_t *buf, size_t len);
-
-/**
- * Flushes buffered output. Returns false on error.
- */
-typedef bool (*LasrsFlushFn)(void *context);
-
-/**
- * A caller-implemented output stream, same rules as [`LasrsInputStream`].
- */
-typedef struct LasrsOutputStream {
-  void *context;
-  LasrsWriteFn write;
-  LasrsSeekFn seek;
-  LasrsFlushFn flush;
-} LasrsOutputStream;
 
 #ifdef __cplusplus
 extern "C" {
@@ -462,6 +462,12 @@ struct LasrsHeader *lasrs_header_from_version(struct LasrsVersion version);
  * buffered, so it is left where las-rs leaves it.
  */
 enum LasrsStatus lasrs_header_new(struct LasrsInputStream stream, struct LasrsHeader **out);
+
+/**
+ * Writes the header, VLRs and VLR padding like `Header::write_to`.
+ */
+enum LasrsStatus lasrs_header_write_to(const struct LasrsHeader *header,
+                                       struct LasrsOutputStream stream);
 
 struct LasrsHeader *lasrs_header_clone(const struct LasrsHeader *header);
 

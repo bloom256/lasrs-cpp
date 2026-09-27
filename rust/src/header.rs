@@ -4,7 +4,7 @@ use crate::{
     error::{LasrsStatus, guard},
     free_handle, into_handle, limits,
     point_data::LasrsPointData,
-    stream::{InputStream, LasrsInputStream},
+    stream::{InputStream, LasrsInputStream, LasrsOutputStream, OutputStream},
     types::{
         LasrsBounds, LasrsBytes, LasrsFormat, LasrsPoint, LasrsStr, LasrsTransforms, LasrsVersion,
         LasrsVlr, borrow_slice, gps_time_type_to_u8,
@@ -12,7 +12,7 @@ use crate::{
 };
 use chrono::Datelike;
 use las::{Builder, Header};
-use std::ptr;
+use std::{io::Write, ptr};
 
 /// Opaque handle; points at a `las::Header`.
 pub struct LasrsHeader {
@@ -91,6 +91,20 @@ pub unsafe extern "C" fn lasrs_header_new(
         limits::check_declared_sizes(&mut read)?;
         let header = Header::new(read)?;
         unsafe { out.write(LasrsHeader::new_handle(header)) };
+        Ok(())
+    })
+}
+
+/// Writes the header, VLRs and VLR padding like `Header::write_to`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lasrs_header_write_to(
+    header: *const LasrsHeader,
+    stream: LasrsOutputStream,
+) -> LasrsStatus {
+    guard(|| {
+        let mut write = OutputStream::buffered(stream);
+        unsafe { header_ref(header) }.write_to(&mut write)?;
+        write.flush()?;
         Ok(())
     })
 }

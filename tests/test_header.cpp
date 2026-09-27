@@ -169,3 +169,23 @@ TEST_CASE("Header rejects streams that are not LAS")
     std::istringstream stream("not a LAS file");
     CHECK_THROWS_AS(las::Header(stream), las::Error);
 }
+
+TEST_CASE("Header::write_to writes what Header reads back")
+{
+    las::Builder builder(las::Version(1, 4));
+    builder.point_format = las::point::Format(6);
+    builder.system_identifier = "write_to";
+    builder.vlrs.push_back({"lasrs", 1, "vlr", {1, 2, 3}});
+    const auto header = builder.into_header();
+
+    std::stringstream stream;
+    header.write_to(stream);
+    CHECK(stream.str().starts_with("LASF"));
+    CHECK(stream.str().size() == header.version().header_size() + header.vlrs()[0].len(false));
+
+    const las::Header read(stream);
+    CHECK(read.version() == header.version());
+    CHECK(read.point_format() == header.point_format());
+    CHECK(read.system_identifier() == "write_to");
+    CHECK(read.vlrs() == header.vlrs());
+}

@@ -275,6 +275,12 @@ class Header
         return copc::CopcHierarchyVlr::from_c(vlr);
     }
 
+    void write_to(std::ostream &stream) const
+    {
+        detail::OutputStream output(stream);
+        detail::check(lasrs_header_write_to(ptr_, output.to_c()));
+    }
+
     bool operator==(const Header &other) const
     {
         return lasrs_header_eq(ptr_, other.ptr_);
