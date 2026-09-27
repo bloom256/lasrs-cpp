@@ -70,7 +70,7 @@ jobs:
         with:
           workspaces: rust
           cache-targets: false
-      - uses: lukka/get-cmake@latest
+      - uses: lukka/get-cmake@v4.4.2
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
       - name: Use the MSVC linker for Rust

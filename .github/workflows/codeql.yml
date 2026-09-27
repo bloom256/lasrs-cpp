@@ -35,7 +35,7 @@ jobs:
       - name: Install Rust
         if: matrix.build-mode == 'manual'
         run: .github/scripts/install-rust.sh
-      - uses: lukka/get-cmake@latest
+      - uses: lukka/get-cmake@v4.4.2
         if: matrix.build-mode == 'manual'
       - name: Build
         if: matrix.build-mode == 'manual'
