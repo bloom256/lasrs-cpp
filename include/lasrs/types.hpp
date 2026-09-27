@@ -53,8 +53,88 @@ struct Version
 
     constexpr bool supports_point_format(const point::Format &format) const;
 
+    template <class F> constexpr bool supports() const
+    {
+        return F::is_supported_by(*this);
+    }
+
+    template <class F> void verify_support_for() const
+    {
+        if (!supports<F>())
+        {
+            throw Error("feature " + std::string(F::name()) + " is not supported by version " + std::to_string(major) +
+                        "." + std::to_string(minor));
+        }
+    }
+
     constexpr auto operator<=>(const Version &) const = default;
 };
+
+namespace detail
+{
+
+template <uint8_t... Minors> struct SupportedByMinors
+{
+    static constexpr bool is_supported_by(Version version)
+    {
+        return version.major == 1 && ((version.minor == Minors) || ...);
+    }
+};
+
+} // namespace detail
+
+namespace feature
+{
+
+struct FileSourceId : detail::SupportedByMinors<1, 2, 3, 4>
+{
+    static constexpr std::string_view name()
+    {
+        return "FileSourceId";
+    }
+};
+
+struct GpsStandardTime : detail::SupportedByMinors<2, 3, 4>
+{
+    static constexpr std::string_view name()
+    {
+        return "GpsStandardTime";
+    }
+};
+
+struct Waveforms : detail::SupportedByMinors<3, 4>
+{
+    static constexpr std::string_view name()
+    {
+        return "Waveforms";
+    }
+};
+
+struct SyntheticReturnNumbers : detail::SupportedByMinors<3, 4>
+{
+    static constexpr std::string_view name()
+    {
+        return "SyntheticReturnNumbers";
+    }
+};
+
+struct LargeFiles : detail::SupportedByMinors<4>
+{
+    static constexpr std::string_view name()
+    {
+        return "LargeFiles";
+    }
+};
+
+struct Evlrs : detail::SupportedByMinors<4>
+{
+    static constexpr std::string_view name()
+    {
+        return "Evlrs";
+    }
+};
+
+} // namespace feature
 
 inline std::ostream &operator<<(std::ostream &out, Version version)
 {

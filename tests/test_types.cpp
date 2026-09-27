@@ -96,6 +96,31 @@ TEST_CASE("Version::supports_point_format agrees with Builder::into_header")
     CHECK_FALSE(las::Version(2, 0).supports_point_format(las::point::Format(0)));
 }
 
+TEST_CASE("Version::supports checks features like las-rs")
+{
+    using namespace las::feature;
+    CHECK(las::Version(1, 4).supports<Waveforms>());
+    CHECK_FALSE(las::Version(1, 2).supports<Waveforms>());
+    CHECK(las::Version(1, 1).supports<FileSourceId>());
+    CHECK_FALSE(las::Version(1, 0).supports<FileSourceId>());
+    CHECK(las::Version(1, 2).supports<GpsStandardTime>());
+    CHECK(las::Version(1, 3).supports<SyntheticReturnNumbers>());
+    CHECK_FALSE(las::Version(1, 3).supports<LargeFiles>());
+    CHECK(las::Version(1, 4).supports<Evlrs>());
+    CHECK_FALSE(las::Version(2, 4).supports<Evlrs>());
+
+    CHECK_NOTHROW(las::Version(1, 4).verify_support_for<Waveforms>());
+    CHECK_THROWS_WITH(las::Version(1, 2).verify_support_for<Waveforms>(),
+                      "feature Waveforms is not supported by version 1.2");
+}
+
+TEST_CASE("Builder reports unsupported features with the las-rs message")
+{
+    las::Builder builder(las::Version(1, 0));
+    builder.file_source_id = 1;
+    CHECK_THROWS_WITH(builder.into_header(), ContainsSubstring("feature FileSourceId is not supported by version 1.0"));
+}
+
 TEST_CASE("Version, Format and Transform print like their Display impls")
 {
     const auto text = [](const auto &value) {
