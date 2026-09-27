@@ -65,6 +65,29 @@ jobs:
   bundle:
     uses: ./.github/workflows/bundle.yml
 
+  # lasrs as a subproject: it must build, link and stay out of the parent's
+  # install.
+  subproject:
+    name: Subproject
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: .github/scripts/install-rust.sh
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          cache-targets: false
+      - uses: lukka/get-cmake@latest
+      - name: Build and install a parent project
+        run: |
+          cmake -S tests/subproject -B build/subproject -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/subproject
+          cmake --install build/subproject --prefix install
+          test ! -e install/include/lasrs
+          ./install/bin/subproject_test
+          ./install/bin/subproject_c_smoke c_smoke.laz
+
   # Runs the prebuilt Linux bundles on other distros: the full test suite
   # where the default compiler supports C++20, the C API test everywhere.
   linux-distros:
