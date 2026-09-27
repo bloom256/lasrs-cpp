@@ -373,6 +373,16 @@ struct Vlr
     }
 };
 
+namespace laz
+{
+
+inline bool is_laszip_vlr(const Vlr &vlr)
+{
+    return vlr.user_id == "laszip encoded" && vlr.record_id == 22204;
+}
+
+} // namespace laz
+
 struct ReaderOptions
 {
     LazParallelism laz_parallelism = LazParallelism::Yes;

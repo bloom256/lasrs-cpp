@@ -125,6 +125,21 @@ TEST_CASE("Vlr classifies CRS records")
     CHECK(vlr.len(true) == 60);
 }
 
+TEST_CASE("laz::is_laszip_vlr finds the LAZ VLR")
+{
+    las::Vlr vlr;
+    CHECK_FALSE(las::laz::is_laszip_vlr(vlr));
+    vlr.user_id = "laszip encoded";
+    vlr.record_id = 22204;
+    CHECK(las::laz::is_laszip_vlr(vlr));
+
+    const auto count_laszip_vlrs = [](const char *name) {
+        return std::ranges::count_if(las::Reader::from_path(test::data(name)).header().vlrs(), las::laz::is_laszip_vlr);
+    };
+    CHECK(count_laszip_vlrs("autzen.laz") == 1);
+    CHECK(count_laszip_vlrs("autzen.las") == 0);
+}
+
 TEST_CASE("VoxelKey navigates the octree")
 {
     const auto child = las::copc::VoxelKey::ROOT.child(7);
