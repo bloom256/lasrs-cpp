@@ -88,9 +88,15 @@ No package manager: users take the compiled static library and headers.
 
 ## Next
 
-- [ ] the rest of the las-rs 0.11 public API: `Version::supports_point_format`,
-      `Vlr::is_copc_info` / `is_copc_hierarchy`, the COPC user id and record
-      id constants, `Writer::into_inner`
+- [x] more of the las-rs 0.11 public API: `Version::supports_point_format`,
+      `Version::supports` and the feature types, `Header(std::istream&)`,
+      `Header::write_to`, `copc::CopcHierarchyVlr`,
+      `Header::copc_hierarchy_evlr`, the COPC and LAZ VLR predicates and
+      constants, `point::new_classification`, `Display` as `operator<<`
+- [ ] still missing: the `raw` module, error kinds (C++ has one
+      `las::Error`), `Writer::into_inner`, `Header::laz_vlr` /
+      `add_laz_vlr`, `CopcInfoVlr` from a `Vlr`,
+      `CopcHierarchyVlr::read_from_with` / `write_to`
 - [ ] report upstream: las-rs allocates the points of a COPC hierarchy
       entry from the count in the file, and laz-rs the chunk table (checked
       here before opening), so a corrupt file can abort the process on a

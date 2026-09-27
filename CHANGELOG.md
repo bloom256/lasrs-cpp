@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+More of the las-rs 0.11 API, with the las-rs names:
+
+- `Version::supports_point_format`, `Version::supports<F>` and
+  `verify_support_for<F>` with the `las::feature` types (`FileSourceId`,
+  `GpsStandardTime`, `Waveforms`, `SyntheticReturnNumbers`, `LargeFiles`,
+  `Evlrs`).
+- `Header(std::istream&)` (`Header::new`) and `Header::write_to`.
+- `copc::CopcHierarchyVlr` with `RECORD_ID` and `iter_entries`, and
+  `Header::copc_hierarchy_evlr`.
+- `copc::USER_ID`, `copc::DESCRIPTION`, `copc::CopcInfoVlr::RECORD_ID`,
+  `Vlr::is_copc_info` and `Vlr::is_copc_hierarchy`.
+- `laz::is_laszip_vlr`.
+- `point::new_classification`, the checked `Classification::new`.
+- `operator<<` for `Version`, `point::Format` and `Transform`, printing
+  what their `Display` impls print.
+
 ## [0.1.1] - 2026-09-27
 
 Fixes from a code review. Upgrading is recommended: several of these
