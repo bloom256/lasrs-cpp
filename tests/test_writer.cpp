@@ -138,3 +138,17 @@ TEST_CASE("Writer closes itself when destroyed")
     las::Reader round_trip(stream);
     CHECK(round_trip.header().number_of_points() == 1);
 }
+
+TEST_CASE("Paths with non-ASCII characters work")
+{
+    const auto directory = test::output("") / std::filesystem::path(u8"\u0434\u0430\u043d\u043d\u044b\u0435 caf\u00e9");
+    std::filesystem::create_directories(directory);
+    for (const auto *extension : {".las", ".laz"})
+    {
+        const auto path = directory / (std::string("points") + extension);
+        auto writer = las::Writer::from_path(path, las::Header());
+        writer.write_point(las::Point());
+        writer.close();
+        CHECK(las::Reader::from_path(path).header().number_of_points() == 1);
+    }
+}
