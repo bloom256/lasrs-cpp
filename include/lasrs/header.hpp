@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <lasrs/crs.hpp>
+#include <lasrs/stream.hpp>
 #include <lasrs/types.hpp>
 #include <utility>
 
@@ -37,6 +38,11 @@ class Header
     }
 
     explicit Header(Version version) : Header(detail::check(lasrs_header_from_version(detail::to_c(version))))
+    {
+    }
+
+    // Reads the header, VLRs and EVLRs and leaves the stream after them.
+    explicit Header(std::istream &stream) : Header(read_from(stream))
     {
     }
 
@@ -288,6 +294,14 @@ class Header
 
     Header(Borrowed, const LasrsHeader *borrowed) : ptr_(borrowed)
     {
+    }
+
+    static LasrsHeader *read_from(std::istream &stream)
+    {
+        detail::InputStream input(stream);
+        LasrsHeader *header = nullptr;
+        detail::check(lasrs_header_new(input.to_c(), &header));
+        return header;
     }
 
     LasrsHeader *mut_ptr()

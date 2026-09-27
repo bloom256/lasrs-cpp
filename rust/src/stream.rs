@@ -64,8 +64,12 @@ pub(crate) type BufferedInput = BufReader<InputStream>;
 pub(crate) type BufferedOutput = BufWriter<OutputStream>;
 
 impl InputStream {
+    pub(crate) fn new(stream: LasrsInputStream) -> Self {
+        Self(stream)
+    }
+
     pub(crate) fn buffered(stream: LasrsInputStream) -> BufferedInput {
-        BufReader::new(Self(stream))
+        BufReader::new(Self::new(stream))
     }
 }
 

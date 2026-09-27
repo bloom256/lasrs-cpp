@@ -2,8 +2,9 @@
 
 use crate::{
     error::{LasrsStatus, guard},
-    free_handle, into_handle,
+    free_handle, into_handle, limits,
     point_data::LasrsPointData,
+    stream::{InputStream, LasrsInputStream},
     types::{
         LasrsBounds, LasrsBytes, LasrsFormat, LasrsPoint, LasrsStr, LasrsTransforms, LasrsVersion,
         LasrsVlr, borrow_slice, gps_time_type_to_u8,
@@ -76,6 +77,22 @@ pub extern "C" fn lasrs_header_from_version(version: LasrsVersion) -> *mut Lasrs
         Ok(())
     });
     handle
+}
+
+/// Reads the header, VLRs and EVLRs like `Header::new`. The stream is not
+/// buffered, so it is left where las-rs leaves it.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lasrs_header_new(
+    stream: LasrsInputStream,
+    out: *mut *mut LasrsHeader,
+) -> LasrsStatus {
+    guard(|| {
+        let mut read = InputStream::new(stream);
+        limits::check_declared_sizes(&mut read)?;
+        let header = Header::new(read)?;
+        unsafe { out.write(LasrsHeader::new_handle(header)) };
+        Ok(())
+    })
 }
 
 #[unsafe(no_mangle)]

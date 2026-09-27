@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <sstream>
 
 #include "common.hpp"
 
@@ -147,4 +149,23 @@ TEST_CASE("Header rejects versions las-rs cannot build")
 {
     CHECK_THROWS_AS(las::Header(las::Version(1, 5)), las::Error);
     CHECK_THROWS_AS(las::Header(las::Version(2, 0)), las::Error);
+}
+
+TEST_CASE("Header reads a header from a stream like Reader")
+{
+    const auto path = test::data(GENERATE("autzen.las", "autzen.laz", "autzen.copc.laz"));
+    CAPTURE(path);
+    const std::string prefix = "prefix";
+    std::istringstream stream(prefix + test::file_bytes(path));
+    stream.seekg(static_cast<std::streamoff>(prefix.size()));
+
+    const las::Header header(stream);
+    CHECK(header == las::Reader::from_path(path).header());
+    CHECK(header.number_of_points() > 0);
+}
+
+TEST_CASE("Header rejects streams that are not LAS")
+{
+    std::istringstream stream("not a LAS file");
+    CHECK_THROWS_AS(las::Header(stream), las::Error);
 }

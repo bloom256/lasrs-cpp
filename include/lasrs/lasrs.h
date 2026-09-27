@@ -431,6 +431,12 @@ struct LasrsHeader *lasrs_header_default(void);
  */
 struct LasrsHeader *lasrs_header_from_version(struct LasrsVersion version);
 
+/**
+ * Reads the header, VLRs and EVLRs like `Header::new`. The stream is not
+ * buffered, so it is left where las-rs leaves it.
+ */
+enum LasrsStatus lasrs_header_new(struct LasrsInputStream stream, struct LasrsHeader **out);
+
 struct LasrsHeader *lasrs_header_clone(const struct LasrsHeader *header);
 
 void lasrs_header_free(struct LasrsHeader *header);
