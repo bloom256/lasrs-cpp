@@ -90,9 +90,10 @@ No package manager: users take the compiled static library and headers.
 - [ ] the rest of the las-rs 0.11 public API: `Version::supports_point_format`,
       `Vlr::is_copc_info` / `is_copc_hierarchy`, the COPC user id and record
       id constants, `Writer::into_inner`
-- [ ] report upstream: las-rs and laz-rs allocate from sizes declared in
-      the file (the LAZ chunk table, the COPC hierarchy), so a corrupt file
-      can abort the process on a failed allocation
+- [ ] report upstream: las-rs allocates the points of a COPC hierarchy
+      entry from the count in the file, and laz-rs the chunk table (checked
+      here before opening), so a corrupt file can abort the process on a
+      failed allocation
 
 ## Out of scope
 

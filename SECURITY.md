@@ -19,8 +19,8 @@ reported there.
 ## Untrusted files
 
 Corrupt files produce `las::Error`. lasrs-cpp checks the sizes a file
-declares for its EVLRs and reads points in batches, so a bogus header does
-not lead to huge allocations. A known gap remains in the upstream crates:
-laz-rs allocates the LAZ chunk table and las-rs the COPC hierarchy from
-counts in the file, and in Rust a failed allocation aborts the process.
-If you read files from untrusted sources, do it in a separate process.
+declares for its EVLRs and LAZ chunk table and reads points in batches, so
+a bogus header does not lead to huge allocations. One known gap remains:
+las-rs allocates the points of a COPC hierarchy entry from the count in
+the file, and in Rust a failed allocation aborts the process. If you read
+COPC files from untrusted sources, do it in a separate process.
