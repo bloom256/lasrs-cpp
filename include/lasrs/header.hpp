@@ -322,9 +322,9 @@ struct Builder
     {
     }
 
-    explicit Builder(Version version)
+    explicit Builder(Version header_version)
     {
-        assign(make_handle(lasrs_builder_from_version(detail::to_c(version))));
+        assign(make_handle(lasrs_builder_from_version(detail::to_c(header_version))));
     }
 
     explicit Builder(const Header &header)
@@ -346,14 +346,14 @@ struct Builder
     {
         const auto c = to_c();
         bool has_version = false;
-        LasrsVersion version{};
+        LasrsVersion minimum{};
         detail::check(lasrs_builder_minimum_supported_version(base_.get(), &c.fields, c.vlrs.data(), c.vlrs.size(),
-                                                              c.evlrs.data(), c.evlrs.size(), &has_version, &version));
+                                                              c.evlrs.data(), c.evlrs.size(), &has_version, &minimum));
         if (!has_version)
         {
             return std::nullopt;
         }
-        return detail::from_c(version);
+        return detail::from_c(minimum);
     }
 
   private:

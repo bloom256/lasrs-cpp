@@ -3,13 +3,15 @@
 
 #include <algorithm>
 #include <array>
-#include <cctype>
+#include <cmath>
 #include <compare>
 #include <cstdint>
+#include <iterator>
 #include <lasrs/error.hpp>
 #include <limits>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace las
@@ -21,7 +23,7 @@ struct Version
     uint8_t minor = 2;
 
     constexpr Version() = default;
-    constexpr Version(uint8_t major, uint8_t minor) : major(major), minor(minor)
+    constexpr Version(uint8_t major_version, uint8_t minor_version) : major{major_version}, minor{minor_version}
     {
     }
 
@@ -82,7 +84,7 @@ struct Color
     uint16_t blue = 0;
 
     constexpr Color() = default;
-    constexpr Color(uint16_t red, uint16_t green, uint16_t blue) : red(red), green(green), blue(blue)
+    constexpr Color(uint16_t r, uint16_t g, uint16_t b) : red(r), green(g), blue(b)
     {
     }
 
@@ -330,8 +332,9 @@ struct Vlr
   private:
     bool is_projection() const
     {
+        const auto ascii_lower = [](char c) { return c >= 'A' && c <= 'Z' ? static_cast<char>(c - 'A' + 'a') : c; };
         return std::ranges::equal(user_id, std::string_view("lasf_projection"),
-                                  [](char a, char b) { return std::tolower(static_cast<unsigned char>(a)) == b; });
+                                  [&](char a, char b) { return ascii_lower(a) == b; });
     }
 
     bool is_geotiff_record() const
@@ -402,9 +405,9 @@ struct VoxelKey
     std::array<VoxelKey, 8> children() const
     {
         std::array<VoxelKey, 8> result;
-        for (int32_t i = 0; i < 8; ++i)
+        for (size_t i = 0; i < result.size(); ++i)
         {
-            result[i] = child(i);
+            result[i] = child(static_cast<int32_t>(i));
         }
         return result;
     }
@@ -420,7 +423,7 @@ struct VoxelKey
                                       info.center_z - info.halfsize};
         const Vector<double> root_max{info.center_x + info.halfsize, info.center_y + info.halfsize,
                                       info.center_z + info.halfsize};
-        const auto divisions = static_cast<double>(1 << l);
+        const auto divisions = std::ldexp(1.0, l);
         const Vector<double> voxel_size{(root_max.x - root_min.x) / divisions, (root_max.y - root_min.y) / divisions,
                                         (root_max.z - root_min.z) / divisions};
         const Vector<double> min{root_min.x + voxel_size.x * x, root_min.y + voxel_size.y * y,
