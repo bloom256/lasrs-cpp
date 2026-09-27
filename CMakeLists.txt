@@ -19,7 +19,8 @@ FetchContent_MakeAvailable(Corrosion)
 
 corrosion_import_crate(
   MANIFEST_PATH ${CMAKE_CURRENT_SOURCE_DIR}/rust/Cargo.toml
-  CRATE_TYPES staticlib)
+  CRATE_TYPES staticlib
+  LOCKED)
 
 # lasrs_ffi is the C API (lasrs.h); lasrs adds the C++20 wrapper on top.
 target_include_directories(lasrs_ffi INTERFACE
