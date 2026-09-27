@@ -3,7 +3,6 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <fstream>
-#include <iterator>
 #include <sstream>
 
 #include "common.hpp"
@@ -12,12 +11,6 @@ using Catch::Matchers::ContainsSubstring;
 
 namespace
 {
-
-std::string file_bytes(const std::filesystem::path &path)
-{
-    std::ifstream file(path, std::ios::binary);
-    return {std::istreambuf_iterator<char>(file), {}};
-}
 
 las::Header compressed(const las::Header &header, bool compress)
 {
@@ -31,7 +24,7 @@ las::Header compressed(const las::Header &header, bool compress)
 TEST_CASE("Reader reads LAS data that starts inside a stream")
 {
     const auto path = test::data(GENERATE("autzen.las", "autzen.laz"));
-    std::istringstream stream("JUNKJUNK" + file_bytes(path));
+    std::istringstream stream("JUNKJUNK" + test::file_bytes(path));
     stream.seekg(8);
     las::Reader reader(stream);
     CHECK(reader.read_all().points() == test::read_all_points(path));
@@ -39,7 +32,7 @@ TEST_CASE("Reader reads LAS data that starts inside a stream")
 
 TEST_CASE("CopcReader reads COPC data that starts inside a stream")
 {
-    std::istringstream stream("JUNK" + file_bytes(test::data("autzen.copc.laz")));
+    std::istringstream stream("JUNK" + test::file_bytes(test::data("autzen.copc.laz")));
     stream.seekg(4);
     las::CopcReader reader(stream);
     CHECK(reader.query(las::LodSelection::All(), las::BoundsSelection::All()).len() ==

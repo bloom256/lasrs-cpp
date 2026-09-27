@@ -2,8 +2,11 @@
 #pragma once
 
 #include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <lasrs/lasrs.hpp>
 #include <string>
+#include <vector>
 
 namespace test
 {
@@ -21,6 +24,12 @@ inline std::filesystem::path output(const std::string &name)
 inline std::vector<las::Point> read_all_points(const std::filesystem::path &path)
 {
     return las::Reader::from_path(path).read_all().points();
+}
+
+inline std::string file_bytes(const std::filesystem::path &path)
+{
+    std::ifstream file(path, std::ios::binary);
+    return {std::istreambuf_iterator<char>(file), {}};
 }
 
 } // namespace test

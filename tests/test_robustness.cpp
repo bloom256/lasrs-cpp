@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
 #include <cstring>
 #include <limits>
 #include <sstream>
 
 #include "common.hpp"
 
+using Catch::Matchers::ContainsSubstring;
+
 // Corrupt files must produce las::Error, never an abort or a hang.
 namespace
 {
 
 // LAS 1.4 header field offsets.
+constexpr size_t offset_to_point_data_offset = 96;
 constexpr size_t legacy_point_count_offset = 107;
 constexpr size_t start_of_first_evlr_offset = 235;
 constexpr size_t point_count_offset = 247;
@@ -79,6 +83,17 @@ TEST_CASE("A point count larger than the data fails without a huge allocation")
     las::Reader reader(stream);
     CHECK(reader.header().number_of_points() == uint64_t{1} << 40);
     CHECK_THROWS_AS(reader.read_all(), las::Error);
+}
+
+TEST_CASE("A LAZ chunk table with more chunks than the data can hold is rejected")
+{
+    auto bytes = test::file_bytes(test::data("autzen.laz"));
+    const auto data_start = peek<uint32_t>(bytes, offset_to_point_data_offset);
+    const auto chunk_table = peek<int64_t>(bytes, data_start);
+    patch<uint32_t>(bytes, static_cast<size_t>(chunk_table) + 4, std::numeric_limits<uint32_t>::max());
+
+    std::istringstream stream(bytes);
+    CHECK_THROWS_WITH(las::Reader(stream), ContainsSubstring("chunk table"));
 }
 
 TEST_CASE("Reading after seeking past the last point returns nothing")
