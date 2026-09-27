@@ -2,12 +2,43 @@
 
 use crate::{
     error::{LasrsStatus, guard},
-    types::{LasrsBounds, LasrsFormat, LasrsTransform, LasrsTransforms},
+    types::{LasrsBounds, LasrsFormat, LasrsTransform, LasrsTransforms, borrow_slice_mut},
 };
 use las::{
     Bounds, Transform,
     point::{Classification, Format},
 };
+use std::fmt::Display;
+
+/// Copies as much of the `Display` text as fits into `buf` and returns its
+/// full length, so a caller can size the buffer with a first call.
+///
+/// # Safety
+/// If `capacity > 0`, `buf` must point to `capacity` writable bytes.
+unsafe fn copy_display(value: impl Display, buf: *mut u8, capacity: usize) -> usize {
+    let text = value.to_string();
+    let n = text.len().min(capacity);
+    unsafe { borrow_slice_mut(buf, n) }.copy_from_slice(&text.as_bytes()[..n]);
+    text.len()
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lasrs_format_display(
+    format: LasrsFormat,
+    buf: *mut u8,
+    capacity: usize,
+) -> usize {
+    unsafe { copy_display(Format::from(format), buf, capacity) }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lasrs_transform_display(
+    transform: LasrsTransform,
+    buf: *mut u8,
+    capacity: usize,
+) -> usize {
+    unsafe { copy_display(Transform::from(transform), buf, capacity) }
+}
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lasrs_format_new(n: u8, out: *mut LasrsFormat) -> LasrsStatus {

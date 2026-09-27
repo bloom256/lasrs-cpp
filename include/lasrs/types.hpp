@@ -10,6 +10,7 @@
 #include <lasrs/error.hpp>
 #include <limits>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -55,6 +56,11 @@ struct Version
     constexpr auto operator<=>(const Version &) const = default;
 };
 
+inline std::ostream &operator<<(std::ostream &out, Version version)
+{
+    return out << static_cast<unsigned>(version.major) << '.' << static_cast<unsigned>(version.minor);
+}
+
 struct Transform
 {
     double scale = 0.001;
@@ -74,6 +80,13 @@ struct Transform
 
     constexpr bool operator==(const Transform &) const = default;
 };
+
+inline std::ostream &operator<<(std::ostream &out, const Transform &transform)
+{
+    return out << detail::display_text([&](uint8_t *buf, size_t capacity) {
+               return lasrs_transform_display({transform.scale, transform.offset}, buf, capacity);
+           });
+}
 
 template <class T> struct Vector
 {
@@ -230,6 +243,12 @@ struct Format
         return format;
     }
 };
+
+inline std::ostream &operator<<(std::ostream &out, const Format &format)
+{
+    return out << detail::display_text(
+               [&](uint8_t *buf, size_t capacity) { return lasrs_format_display(format.to_c(), buf, capacity); });
+}
 
 } // namespace point
 

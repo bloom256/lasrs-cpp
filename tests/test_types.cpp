@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
+#include <sstream>
 
 #include "common.hpp"
 
@@ -93,6 +94,22 @@ TEST_CASE("Version::supports_point_format agrees with Builder::into_header")
     CHECK_FALSE(las::Version(1, 2).supports_point_format(las::point::Format(4)));
     CHECK_FALSE(las::Version(1, 5).supports_point_format(las::point::Format(0)));
     CHECK_FALSE(las::Version(2, 0).supports_point_format(las::point::Format(0)));
+}
+
+TEST_CASE("Version, Format and Transform print like their Display impls")
+{
+    const auto text = [](const auto &value) {
+        std::ostringstream out;
+        out << value;
+        return out.str();
+    };
+    CHECK(text(las::Version(1, 4)) == "1.4");
+    CHECK(text(las::point::Format(3)) == "point format 3");
+    las::point::Format invalid;
+    invalid.has_nir = true;
+    CHECK_THAT(text(invalid), ContainsSubstring("point format that does not map onto a code: Format {"));
+    CHECK(text(las::Transform{0.01, 100.0}) == "`0.01 * x + 100`");
+    CHECK(text(las::Transform{1e-7, -2.5}) == "`0.0000001 * x + -2.5`");
 }
 
 TEST_CASE("Bounds grow and intersect")

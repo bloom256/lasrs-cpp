@@ -71,6 +71,14 @@ template <class T> T *check(T *result)
     return result;
 }
 
+// Text of a Rust Display impl exported as `size_t display(buf, capacity)`.
+template <class Display> std::string display_text(Display display)
+{
+    std::string text(display(nullptr, 0), '\0');
+    display(reinterpret_cast<uint8_t *>(text.data()), text.size());
+    return text;
+}
+
 inline std::string path_to_utf8(const std::filesystem::path &path)
 {
     const auto utf8 = path.u8string();

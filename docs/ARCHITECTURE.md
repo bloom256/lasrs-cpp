@@ -47,6 +47,7 @@ Translation rules:
 | enum with data used as a value (`GeoTiffData`) | `std::variant` |
 | method on a data-less enum | free function in the same namespace |
 | checked constructor of such an enum (`Classification::new`) | free function `new_<enum>` (`point::new_classification`) |
+| `impl Display` | `operator<<` for `std::ostream`, text formatted by Rust |
 | `impl Read + Seek`, `impl Write + Seek` | `std::istream&`, `std::ostream&` (must outlive the object) |
 | `NaiveDate`, `Uuid` | `std::chrono::year_month_day`, `std::array<uint8_t, 16>` |
 

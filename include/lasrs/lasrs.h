@@ -712,6 +712,10 @@ enum LasrsStatus lasrs_reader_fill_points(struct LasrsReader *reader,
 
 enum LasrsStatus lasrs_reader_seek(struct LasrsReader *reader, uint64_t position);
 
+size_t lasrs_format_display(struct LasrsFormat format, uint8_t *buf, size_t capacity);
+
+size_t lasrs_transform_display(struct LasrsTransform transform, uint8_t *buf, size_t capacity);
+
 enum LasrsStatus lasrs_format_new(uint8_t n, struct LasrsFormat *out);
 
 uint16_t lasrs_format_len(struct LasrsFormat format);
