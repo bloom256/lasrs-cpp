@@ -4,7 +4,8 @@ Releases are built and published by `.github/workflows/release.yml` when a
 version tag is pushed. To release version `X.Y.Z`:
 
 1. Set the version in `CMakeLists.txt` (`project(... VERSION X.Y.Z)`) and
-   `rust/Cargo.toml` (`version = "X.Y.Z"`).
+   `rust/Cargo.toml` (`version = "X.Y.Z"`), then refresh `rust/Cargo.lock`
+   with `cargo update -p lasrs_ffi --offline` (CI builds with `--locked`).
 2. Set `LASRS_VERSION` and `GIT_TAG` in the README's snippets to
    `vX.Y.Z`, and `version` / `date-released` in `CITATION.cff`.
 3. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`
