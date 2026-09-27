@@ -66,7 +66,7 @@ class BoundsSelection
 };
 
 // Stream-based readers keep a reference to the stream: it must outlive the
-// reader.
+// reader. A moved-from reader may only be destroyed or assigned to.
 class CopcReader
 {
   public:

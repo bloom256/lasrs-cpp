@@ -8,7 +8,8 @@ namespace las
 {
 
 // Stream-based readers keep a reference to the stream: it must outlive the
-// reader and must not be used by anyone else meanwhile.
+// reader and must not be used by anyone else meanwhile. A moved-from reader
+// may only be destroyed or assigned to.
 class Reader
 {
   public:
