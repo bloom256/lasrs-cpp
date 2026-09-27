@@ -13,6 +13,24 @@ TEST_CASE("CopcReader exposes the COPC info")
     CHECK(info->halfsize > 0.0);
 }
 
+TEST_CASE("The COPC info VLR is recognized")
+{
+    const auto reader = las::CopcReader::from_path(test::data("autzen.copc.laz"));
+    const auto vlrs = reader.header().vlrs();
+    REQUIRE(!vlrs.empty());
+    CHECK(vlrs[0].is_copc_info());
+    CHECK(vlrs[0].user_id == las::copc::USER_ID);
+    CHECK(vlrs[0].record_id == las::copc::CopcInfoVlr::RECORD_ID);
+
+    las::Vlr vlr;
+    CHECK_FALSE(vlr.is_copc_info());
+    vlr.user_id = "copc";
+    vlr.record_id = 1;
+    CHECK(vlr.is_copc_info());
+    vlr.user_id = "COPC";
+    CHECK_FALSE(vlr.is_copc_info());
+}
+
 TEST_CASE("Plain LAS files have no COPC info")
 {
     const auto reader = las::Reader::from_path(test::data("autzen.las"));

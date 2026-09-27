@@ -355,6 +355,7 @@ struct Vlr
     {
         return is_projection() && is_geotiff_record();
     }
+    bool is_copc_info() const;
 
     bool operator==(const Vlr &) const = default;
 
@@ -399,8 +400,13 @@ struct WriterOptions
 namespace copc
 {
 
+inline constexpr std::string_view USER_ID = "copc";
+inline constexpr std::string_view DESCRIPTION = "https://copc.io";
+
 struct CopcInfoVlr
 {
+    static constexpr uint16_t RECORD_ID = 1;
+
     double center_x = 0.0;
     double center_y = 0.0;
     double center_z = 0.0;
@@ -476,6 +482,11 @@ struct Entry
 };
 
 } // namespace copc
+
+inline bool Vlr::is_copc_info() const
+{
+    return user_id == copc::USER_ID && record_id == copc::CopcInfoVlr::RECORD_ID;
+}
 
 namespace detail
 {
