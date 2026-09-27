@@ -3,15 +3,14 @@
 Releases are built and published by `.github/workflows/release.yml` when a
 version tag is pushed. To release version `X.Y.Z`:
 
-1. Set the version in `CMakeLists.txt` (`project(... VERSION X.Y.Z)`) and
-   `rust/Cargo.toml` (`version = "X.Y.Z"`), then refresh `rust/Cargo.lock`
-   with `cargo update -p lasrs_ffi --offline` (CI builds with `--locked`).
-2. Set `LASRS_VERSION` and `GIT_TAG` in the README's snippets to
-   `vX.Y.Z`, and `version` / `date-released` in `CITATION.cff`.
-3. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`
-   and add a new empty `## [Unreleased]` above it.
-4. Commit, push, and wait for CI to pass.
-5. Tag and push the tag:
+1. Run `scripts/bump-version.sh X.Y.Z`. It sets the version in
+   `CMakeLists.txt`, `rust/Cargo.toml` (and `Cargo.lock`, which CI builds
+   with `--locked`) and `CITATION.cff` (with today's date), points the
+   README's `LASRS_VERSION` and `GIT_TAG` snippets at `vX.Y.Z`, and turns
+   `## [Unreleased]` in `CHANGELOG.md` into `## [X.Y.Z] - YYYY-MM-DD` under
+   a new empty `## [Unreleased]`. Review the diff.
+2. Commit, push, and wait for CI to pass.
+3. Tag and push the tag:
 
    ```
    git tag -a vX.Y.Z -m "lasrs-cpp X.Y.Z"    # or -s to sign it
