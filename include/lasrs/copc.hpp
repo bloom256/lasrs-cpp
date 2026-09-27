@@ -85,10 +85,18 @@ class CopcReader
     }
 
     CopcReader(CopcReader &&) noexcept = default;
-    CopcReader &operator=(CopcReader &&) noexcept = default;
     CopcReader(const CopcReader &) = delete;
     CopcReader &operator=(const CopcReader &) = delete;
     ~CopcReader() = default;
+
+    // The Rust reader is released before the stream adapter it points to.
+    CopcReader &operator=(CopcReader &&other) noexcept
+    {
+        handle_ = std::move(other.handle_);
+        input_ = std::move(other.input_);
+        header_ = std::move(other.header_);
+        return *this;
+    }
 
     const Header &header() const
     {

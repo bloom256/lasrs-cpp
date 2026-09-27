@@ -34,10 +34,18 @@ class Reader
     }
 
     Reader(Reader &&) noexcept = default;
-    Reader &operator=(Reader &&) noexcept = default;
     Reader(const Reader &) = delete;
     Reader &operator=(const Reader &) = delete;
     ~Reader() = default;
+
+    // The Rust reader is released before the stream adapter it points to.
+    Reader &operator=(Reader &&other) noexcept
+    {
+        handle_ = std::move(other.handle_);
+        input_ = std::move(other.input_);
+        header_ = std::move(other.header_);
+        return *this;
+    }
 
     const Header &header() const
     {
