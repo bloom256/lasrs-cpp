@@ -11,4 +11,4 @@ include(${CMAKE_CURRENT_LIST_DIR}/lasrs-targets.cmake)
 # corrosion_install does not export the system libraries a Rust staticlib
 # needs, so they are recorded when the bundle is built.
 set_property(TARGET lasrs_ffi-static APPEND PROPERTY INTERFACE_LINK_LIBRARIES "@Rust_CARGO_TARGET_LINK_NATIVE_LIBS@")
-set_property(TARGET lasrs_ffi-static APPEND PROPERTY INTERFACE_LINK_OPTIONS "@Rust_CARGO_TARGET_LINK_OPTIONS@")
+set_property(TARGET lasrs_ffi-static APPEND PROPERTY INTERFACE_LINK_OPTIONS "@LASRS_LINK_OPTIONS@")

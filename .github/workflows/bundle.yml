@@ -57,6 +57,7 @@ jobs:
             os: windows-latest
             rustflags: -C target-feature=+crt-static
             cmake-args: -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+            consumer-args: -DCMAKE_MSVC_RUNTIME_LIBRARY='MultiThreaded$<$<CONFIG:Debug>:Debug>'
           - { name: linux-x64, os: ubuntu-latest }
           - { name: linux-arm64, os: ubuntu-24.04-arm }
           - { name: macos-arm64, os: macos-latest }
@@ -89,10 +90,12 @@ jobs:
           path: dist/lasrs-cpp/share/lasrs
       - name: Build programs against the bundle
         run: |
-          cmake -S tests/package -B build/package -G Ninja -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake-args }} \
-            -DCMAKE_PREFIX_PATH="${{ github.workspace }}/dist/lasrs-cpp"
-          cmake --build build/package
-          ctest --test-dir build/package --output-on-failure
+          for config in Release Debug; do
+            cmake -S tests/package -B build/package-$config -G Ninja -DCMAKE_BUILD_TYPE=$config ${{ matrix.consumer-args }} \
+              -DCMAKE_PREFIX_PATH="${{ github.workspace }}/dist/lasrs-cpp"
+            cmake --build build/package-$config
+            ctest --test-dir build/package-$config --output-on-failure
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: lasrs-cpp-${{ matrix.name }}

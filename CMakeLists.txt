@@ -48,6 +48,11 @@ if(LASRS_INSTALL)
   corrosion_install(TARGETS lasrs_ffi EXPORT lasrs-targets)
   install(TARGETS lasrs EXPORT lasrs-targets)
 
+  # The consumer's CMAKE_MSVC_RUNTIME_LIBRARY picks the C runtime; a recorded
+  # /defaultlib:libcmt would break consumers that use the debug one (/MTd).
+  set(LASRS_LINK_OPTIONS ${Rust_CARGO_TARGET_LINK_OPTIONS})
+  list(FILTER LASRS_LINK_OPTIONS EXCLUDE REGEX "^/defaultlib:")
+
   set(config_dir ${CMAKE_INSTALL_LIBDIR}/cmake/lasrs)
   install(EXPORT lasrs-targets NAMESPACE lasrs:: DESTINATION ${config_dir})
   configure_package_config_file(cmake/lasrs-config.cmake.in
