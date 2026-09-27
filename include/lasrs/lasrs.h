@@ -410,6 +410,10 @@ struct LasrsGeoTiffKeyEntry lasrs_geotiff_crs_entry(const struct LasrsGeoTiffCrs
 
 struct LasrsHeader *lasrs_header_default(void);
 
+/**
+ * Returns null if las-rs cannot build a header for `version` (for example
+ * LAS 1.5); the reason is available from `lasrs_last_error`.
+ */
 struct LasrsHeader *lasrs_header_from_version(struct LasrsVersion version);
 
 struct LasrsHeader *lasrs_header_clone(const struct LasrsHeader *header);
@@ -533,7 +537,9 @@ size_t lasrs_point_data_record_len(const struct LasrsPointData *points);
 
 /**
  * Resizes to `n` points; returns the writable byte slab
- * (`n * record_len` bytes), valid until the next modification.
+ * (`n * record_len` bytes), valid until the next modification. Returns
+ * null if the size overflows; the reason is available from
+ * `lasrs_last_error`.
  */
 uint8_t *lasrs_point_data_resize_for(struct LasrsPointData *points, size_t n);
 

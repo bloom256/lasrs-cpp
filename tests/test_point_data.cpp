@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 #include <catch2/catch_test_macros.hpp>
+#include <limits>
 
 #include "common.hpp"
 
@@ -92,4 +93,11 @@ TEST_CASE("PointData copies are independent")
     copy.resize_for(1);
     CHECK(original.len() == 3);
     CHECK(copy.len() == 1);
+}
+
+TEST_CASE("PointData::resize_for rejects sizes that overflow")
+{
+    auto points = las::PointDataBuilder().with_format(las::point::Format(1)).build();
+    CHECK_THROWS_AS(points.resize_for(std::numeric_limits<size_t>::max()), las::Error);
+    CHECK(points.is_empty());
 }

@@ -142,3 +142,9 @@ TEST_CASE("Headers without GeoTIFF VLRs have no GeoTIFF CRS")
 {
     CHECK_FALSE(las::Header().get_geotiff_crs().has_value());
 }
+
+TEST_CASE("Header rejects versions las-rs cannot build")
+{
+    CHECK_THROWS_AS(las::Header(las::Version(1, 5)), las::Error);
+    CHECK_THROWS_AS(las::Header(las::Version(2, 0)), las::Error);
+}

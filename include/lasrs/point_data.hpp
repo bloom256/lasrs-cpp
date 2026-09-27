@@ -75,7 +75,7 @@ class PointData
 
     std::span<uint8_t> resize_for(size_t n)
     {
-        uint8_t *bytes = lasrs_point_data_resize_for(handle_.get(), n);
+        uint8_t *bytes = detail::check(lasrs_point_data_resize_for(handle_.get(), n));
         return {bytes, n * record_len()};
     }
 

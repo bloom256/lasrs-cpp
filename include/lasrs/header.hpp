@@ -36,7 +36,7 @@ class Header
     {
     }
 
-    explicit Header(Version version) : Header(lasrs_header_from_version(detail::to_c(version)))
+    explicit Header(Version version) : Header(detail::check(lasrs_header_from_version(detail::to_c(version))))
     {
     }
 

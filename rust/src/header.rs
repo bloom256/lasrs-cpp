@@ -10,7 +10,8 @@ use crate::{
     },
 };
 use chrono::Datelike;
-use las::Header;
+use las::{Builder, Header};
+use std::ptr;
 
 /// Opaque handle; points at a `las::Header`.
 pub struct LasrsHeader {
@@ -64,9 +65,17 @@ pub extern "C" fn lasrs_header_default() -> *mut LasrsHeader {
     LasrsHeader::new_handle(Header::default())
 }
 
+/// Returns null if las-rs cannot build a header for `version` (for example
+/// LAS 1.5); the reason is available from `lasrs_last_error`.
 #[unsafe(no_mangle)]
 pub extern "C" fn lasrs_header_from_version(version: LasrsVersion) -> *mut LasrsHeader {
-    LasrsHeader::new_handle(Header::from(las::Version::from(version)))
+    let mut handle = ptr::null_mut();
+    let _ = guard(|| {
+        let header = Builder::from(las::Version::from(version)).into_header()?;
+        handle = LasrsHeader::new_handle(header);
+        Ok(())
+    });
+    handle
 }
 
 #[unsafe(no_mangle)]

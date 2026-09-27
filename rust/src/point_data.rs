@@ -9,6 +9,7 @@ use crate::{
     },
 };
 use las::{PointData, PointDataBuilder};
+use std::ptr;
 
 pub struct LasrsPointData(pub(crate) PointData);
 
@@ -105,13 +106,24 @@ pub unsafe extern "C" fn lasrs_point_data_record_len(points: *const LasrsPointDa
 }
 
 /// Resizes to `n` points; returns the writable byte slab
-/// (`n * record_len` bytes), valid until the next modification.
+/// (`n * record_len` bytes), valid until the next modification. Returns
+/// null if the size overflows; the reason is available from
+/// `lasrs_last_error`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lasrs_point_data_resize_for(
     points: *mut LasrsPointData,
     n: usize,
 ) -> *mut u8 {
-    unsafe { (*points).0.resize_for(n) }.as_mut_ptr()
+    let mut slab = ptr::null_mut();
+    let _ = guard(|| {
+        let points = unsafe { &mut (*points).0 };
+        n.checked_mul(points.record_len())
+            .filter(|&bytes| isize::try_from(bytes).is_ok())
+            .ok_or_else(|| format!("cannot resize point data to {n} points: the size overflows"))?;
+        slab = points.resize_for(n).as_mut_ptr();
+        Ok(())
+    });
+    slab
 }
 
 /// Decodes all points. `out` holds `len()` points and `extra_bytes_out`

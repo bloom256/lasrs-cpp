@@ -48,12 +48,27 @@ inline LasrsBytes to_c(std::span<const uint8_t> b) noexcept
     return {b.data(), b.size()};
 }
 
+[[noreturn]] inline void throw_last_error()
+{
+    throw Error(std::string(to_string_view(lasrs_last_error())));
+}
+
 inline void check(LasrsStatus status)
 {
     if (status != LASRS_STATUS_OK)
     {
-        throw Error(std::string(to_string_view(lasrs_last_error())));
+        throw_last_error();
     }
+}
+
+// For C functions that report failure by returning null.
+template <class T> T *check(T *result)
+{
+    if (result == nullptr)
+    {
+        throw_last_error();
+    }
+    return result;
 }
 
 inline std::string path_to_utf8(const std::filesystem::path &path)
