@@ -8,9 +8,9 @@ Fast LAS / LAZ / COPC reading and writing for C++, powered by the Rust
 crate [las-rs](https://github.com/gadomski/las-rs) and its parallel LAZ
 codec [laz-rs](https://github.com/tmontaigu/laz-rs).
 
-> **v0.1:** the complete las-rs 0.11 API, tested on Windows, Linux and
-> macOS (x64 and arm64), with prebuilt releases. As usual for 0.x
-> versions, the API may still change between minor releases.
+> **v0.1:** the las-rs 0.11 API for reading, writing and COPC, tested on
+> Windows, Linux and macOS (x64 and arm64), with prebuilt releases. As
+> usual for 0.x versions, the API may still change between minor releases.
 
 ## Why
 
@@ -199,7 +199,7 @@ Let CMake download the bundle for your platform from the
 set(LASRS_VERSION v0.1.0)
 if(WIN32)
   set(lasrs_platform windows-x64)
-  if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "^MultiThreaded(Debug)?$")
+  if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "^MultiThreaded" AND NOT CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "DLL")
     set(lasrs_platform windows-x64-static-crt)
   endif()
   set(lasrs_archive zip)
@@ -235,7 +235,7 @@ Or download an archive yourself and point CMake at it with
 | Your build | Download |
 |---|---|
 | Windows x64, MSVC, dynamic CRT (`/MD`, the default) | `lasrs-cpp-vX.Y.Z-windows-x64.zip` |
-| Windows x64, MSVC, static CRT (`/MT`) | `lasrs-cpp-vX.Y.Z-windows-x64-static-crt.zip` |
+| Windows x64, MSVC, static CRT (`/MT`, `/MTd`) | `lasrs-cpp-vX.Y.Z-windows-x64-static-crt.zip` |
 | Linux x64, glibc 2.28 or newer | `lasrs-cpp-vX.Y.Z-linux-x64.tar.gz` |
 | Linux arm64, glibc 2.28 or newer | `lasrs-cpp-vX.Y.Z-linux-arm64.tar.gz` |
 | macOS Apple Silicon | `lasrs-cpp-vX.Y.Z-macos-arm64.tar.gz` |
@@ -262,8 +262,9 @@ See [docs/BUILDING.md](docs/BUILDING.md) for the toolchain.
 
 ## Project practices
 
-- Every push and pull request is built and tested by GitHub Actions on
-  Windows, Linux and macOS; the CI badge above shows the current status.
+- Every push to main and every pull request is built and tested by
+  GitHub Actions on Windows, Linux and macOS; the CI badge above shows
+  the current status.
 - Formatting (cargo fmt, clang-format), linting (clippy), a check that
   the committed C header is up to date, license checks (cargo deny) and
   sanitizers run in CI.

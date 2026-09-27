@@ -17,7 +17,7 @@ See [docs/BUILDING.md](docs/BUILDING.md).
 - Keep the FFI surface small and batch-oriented. No per-point exported
   functions.
 - Every exported Rust function must be panic-safe (`catch_unwind`) and
-  return a `lasrs_status`.
+  return a `LasrsStatus`, or a null handle on error.
 - After changing exported functions, regenerate `include/lasrs/lasrs.h`
   with cbindgen and commit it.
 - Add tests for new functionality (C++ tests in `tests/`, Rust unit tests

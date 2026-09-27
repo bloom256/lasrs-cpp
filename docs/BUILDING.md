@@ -79,8 +79,12 @@ cmake --build --preset release
 cmake --install build/release --prefix <dir>
 ```
 
-CI builds this bundle for Windows x64, Linux x64 and macOS arm64 on every
-run and keeps it as a downloadable workflow artifact for 30 days.
+CI builds this bundle for every platform in the README's download table
+(Windows x64 with the dynamic and the static CRT, Linux x64 and arm64,
+macOS arm64 and x64) on every run and keeps it as a downloadable workflow
+artifact for 30 days. For the static CRT, build with
+`RUSTFLAGS=-C target-feature=+crt-static` and
+`-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded`.
 
 ### Using the bundle with CMake
 
@@ -95,7 +99,9 @@ Compile as C++20 with `<dir>/include` on the include path and link the
 static library plus the system libraries the Rust code needs:
 
 - Windows (MSVC): `lasrs_ffi.lib kernel32.lib ntdll.lib userenv.lib
-  ws2_32.lib dbghelp.lib`. The library uses the dynamic release CRT (`/MD`).
+  ws2_32.lib dbghelp.lib`. `windows-x64` works with the dynamic CRT
+  (`/MD`, `/MDd`), `windows-x64-static-crt` with the static one (`/MT`,
+  `/MTd`).
 - Linux: `-llasrs_ffi -lgcc_s -lutil -lrt -lpthread -lm -ldl`
 - macOS: `-llasrs_ffi -framework CoreFoundation -lSystem -lc -lm`
 

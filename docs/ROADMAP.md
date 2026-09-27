@@ -45,7 +45,7 @@ Scope: everything las-rs 0.11 offers, mirrored in C++; nothing more.
 
 ## M5 - CI (GitHub Actions)
 
-### ci.yml - on every push and pull request
+### ci.yml - on pushes to main and pull requests
 
 - [x] build + test matrix: Windows (MSVC), Linux (GCC, Clang), macOS
       (Apple Clang, arm64); Debug and Release
@@ -84,6 +84,15 @@ No package manager: users take the compiled static library and headers.
 - [x] CodeQL code scanning (C/C++, Rust, workflows)
 - [x] issue templates, pull request template
 - [x] SECURITY.md, CODE_OF_CONDUCT.md
+
+## Next
+
+- [ ] the rest of the las-rs 0.11 public API: `Version::supports_point_format`,
+      `Vlr::is_copc_info` / `is_copc_hierarchy`, the COPC user id and record
+      id constants, `Writer::into_inner`
+- [ ] report upstream: las-rs and laz-rs allocate from sizes declared in
+      the file (the LAZ chunk table, the COPC hierarchy), so a corrupt file
+      can abort the process on a failed allocation
 
 ## Out of scope
 
