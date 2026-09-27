@@ -97,6 +97,10 @@ No package manager: users take the compiled static library and headers.
       `las::Error`), `Writer::into_inner`, `Header::laz_vlr` /
       `add_laz_vlr`, `CopcInfoVlr` from a `Vlr`,
       `CopcHierarchyVlr::read_from_with` / `write_to`
+- [ ] watch las-rs issue #157 (hierarchy pages resolved relative to the root
+      page; multi-page COPC files from PDAL / untwine may fail or yield a
+      subset). No workaround here: bump las-rs when it is fixed and add a
+      multi-page test file.
 - [ ] report upstream: las-rs allocates the points of a COPC hierarchy
       entry from the count in the file, and laz-rs the chunk table (checked
       here before opening), so a corrupt file can abort the process on a
