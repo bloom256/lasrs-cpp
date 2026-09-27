@@ -52,6 +52,7 @@ add_executable(lasrs_tests
   test_point_data.cpp
   test_reader.cpp
   test_robustness.cpp
+  test_roundtrip.cpp
   test_streams.cpp
   test_types.cpp
   test_writer.cpp)
