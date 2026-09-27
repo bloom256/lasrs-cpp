@@ -4,24 +4,34 @@ use crate::{
     error::{BoxError, LasrsStatus, guard},
     free_handle,
     header::LasrsHeader,
-    into_handle,
+    into_handle, limits,
     point_data::LasrsPointData,
     stream::{BufferedInput, InputStream, LasrsInputStream},
     types::{LasrsBounds, LasrsEntry, LasrsStr, LasrsVoxelKey, borrow_slice_mut},
 };
-use las::{BoundsSelection, CopcReader, LodSelection, copc::VoxelKey};
+use las::{
+    BoundsSelection, CopcReader, Header, LodSelection,
+    copc::{Entry, VoxelKey},
+};
 use std::{fs::File, io::BufReader};
 
-pub enum LasrsCopcReader {
+enum Source {
     File(CopcReader<'static, BufReader<File>>),
     Stream(CopcReader<'static, BufferedInput>),
+}
+
+/// Keeps its own copy of the header so the pointer handed out by
+/// `lasrs_copc_reader_header` never aliases the mutably borrowed reader.
+pub struct LasrsCopcReader {
+    source: Source,
+    header: Header,
 }
 
 macro_rules! with_reader {
     ($handle:expr, $r:ident => $body:expr) => {
         match $handle {
-            LasrsCopcReader::File($r) => $body,
-            LasrsCopcReader::Stream($r) => $body,
+            Source::File($r) => $body,
+            Source::Stream($r) => $body,
         }
     };
 }
@@ -76,11 +86,12 @@ impl From<LasrsBoundsSelection> for BoundsSelection {
 
 fn open(
     out: *mut *mut LasrsCopcReader,
-    make: impl FnOnce() -> Result<LasrsCopcReader, BoxError>,
+    make: impl FnOnce() -> Result<Source, BoxError>,
 ) -> LasrsStatus {
     guard(|| {
-        let reader = make()?;
-        unsafe { out.write(into_handle(reader)) };
+        let source = make()?;
+        let header = with_reader!(&source, r => r.header().clone());
+        unsafe { out.write(into_handle(LasrsCopcReader { source, header })) };
         Ok(())
     })
 }
@@ -91,8 +102,9 @@ pub unsafe extern "C" fn lasrs_copc_reader_from_path(
     out: *mut *mut LasrsCopcReader,
 ) -> LasrsStatus {
     open(out, || {
-        let path = unsafe { path.to_str() }?;
-        Ok(LasrsCopcReader::File(CopcReader::from_path(path)?))
+        let mut read = BufReader::new(File::open(unsafe { path.to_str() }?)?);
+        limits::check_declared_sizes(&mut read)?;
+        Ok(Source::File(CopcReader::new(read)?))
     })
 }
 
@@ -102,9 +114,9 @@ pub unsafe extern "C" fn lasrs_copc_reader_new(
     out: *mut *mut LasrsCopcReader,
 ) -> LasrsStatus {
     open(out, || {
-        Ok(LasrsCopcReader::Stream(CopcReader::new(
-            InputStream::buffered(stream),
-        )?))
+        let mut read = InputStream::buffered(stream);
+        limits::check_declared_sizes(&mut read)?;
+        Ok(Source::Stream(CopcReader::new(read)?))
     })
 }
 
@@ -118,14 +130,14 @@ pub unsafe extern "C" fn lasrs_copc_reader_free(reader: *mut LasrsCopcReader) {
 pub unsafe extern "C" fn lasrs_copc_reader_header(
     reader: *const LasrsCopcReader,
 ) -> *const LasrsHeader {
-    with_reader!(unsafe { &*reader }, r => LasrsHeader::borrow(r.header()))
+    LasrsHeader::borrow(unsafe { &(*reader).header })
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lasrs_copc_reader_hierarchy_entries_len(
     reader: *const LasrsCopcReader,
 ) -> usize {
-    with_reader!(unsafe { &*reader }, r => r.hierarchy_entries().count())
+    with_reader!(unsafe { &(*reader).source }, r => r.hierarchy_entries().count())
 }
 
 /// Writes up to `capacity` entries to `out`; returns the number written.
@@ -136,7 +148,7 @@ pub unsafe extern "C" fn lasrs_copc_reader_hierarchy_entries(
     capacity: usize,
 ) -> usize {
     let out = unsafe { borrow_slice_mut(out, capacity) };
-    with_reader!(unsafe { &*reader }, r => {
+    with_reader!(unsafe { &(*reader).source }, r => {
         out.iter_mut()
             .zip(r.hierarchy_entries())
             .map(|(slot, entry)| *slot = entry.into())
@@ -152,7 +164,7 @@ pub unsafe extern "C" fn lasrs_copc_reader_hierarchy_entry(
     out: *mut LasrsEntry,
 ) -> bool {
     let key = VoxelKey::from(key);
-    match with_reader!(unsafe { &*reader }, r => r.hierarchy_entry(&key)) {
+    match with_reader!(unsafe { &(*reader).source }, r => r.hierarchy_entry(&key)) {
         Some(entry) => {
             unsafe { out.write(entry.into()) };
             true
@@ -168,8 +180,19 @@ pub unsafe extern "C" fn lasrs_copc_reader_read_entry(
     out: *mut *mut LasrsPointData,
 ) -> LasrsStatus {
     guard(|| {
-        let entry = entry.into();
-        let points = with_reader!(unsafe { &mut *reader }, r => r.read_entry(&entry))?;
+        let entry = Entry::from(entry);
+        let source = unsafe { &mut (*reader).source };
+        // las-rs allocates the entry's declared point count; only accept
+        // entries that really are in this file's hierarchy.
+        let known = with_reader!(&*source, r => r.hierarchy_entry(&entry.key));
+        let matches = known.is_some_and(|known| {
+            (known.offset, known.byte_size, known.point_count)
+                == (entry.offset, entry.byte_size, entry.point_count)
+        });
+        if !matches {
+            return Err("the entry is not part of this file's COPC hierarchy".into());
+        }
+        let points = with_reader!(source, r => r.read_entry(&entry))?;
         unsafe { out.write(into_handle(LasrsPointData(points))) };
         Ok(())
     })
@@ -184,7 +207,7 @@ pub unsafe extern "C" fn lasrs_copc_reader_query(
 ) -> LasrsStatus {
     guard(|| {
         let (levels, bounds) = (levels.into(), bounds.into());
-        let points = with_reader!(unsafe { &mut *reader }, r => r.query(levels, bounds))?;
+        let points = with_reader!(unsafe { &mut (*reader).source }, r => r.query(levels, bounds))?;
         unsafe { out.write(into_handle(LasrsPointData(points))) };
         Ok(())
     })

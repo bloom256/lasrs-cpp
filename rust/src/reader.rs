@@ -4,14 +4,23 @@ use crate::{
     error::{BoxError, LasrsStatus, guard},
     free_handle,
     header::LasrsHeader,
-    into_handle,
+    into_handle, limits,
     point_data::LasrsPointData,
     stream::{InputStream, LasrsInputStream},
     types::LasrsStr,
 };
-use las::{LazParallelism, Reader, ReaderOptions};
+use las::{Header, LazParallelism, Reader, ReaderOptions};
+use std::{
+    fs::File,
+    io::{BufReader, Read, Seek},
+};
 
-pub struct LasrsReader(Reader);
+/// Keeps its own copy of the header so the pointer handed out by
+/// `lasrs_reader_header` never aliases the mutably borrowed reader.
+pub struct LasrsReader {
+    reader: Reader,
+    header: Header,
+}
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -29,13 +38,17 @@ impl From<LasrsLazParallelism> for LazParallelism {
     }
 }
 
-fn open(
+fn open<R: Read + Seek + Send + Sync + 'static>(
     out: *mut *mut LasrsReader,
-    make: impl FnOnce() -> Result<Reader, BoxError>,
+    source: impl FnOnce() -> Result<R, BoxError>,
+    options: ReaderOptions,
 ) -> LasrsStatus {
     guard(|| {
-        let reader = make()?;
-        unsafe { out.write(into_handle(LasrsReader(reader))) };
+        let mut read = source()?;
+        limits::check_declared_sizes(&mut read)?;
+        let reader = Reader::with_options(read, options)?;
+        let header = reader.header().clone();
+        unsafe { out.write(into_handle(LasrsReader { reader, header })) };
         Ok(())
     })
 }
@@ -45,7 +58,8 @@ pub unsafe extern "C" fn lasrs_reader_from_path(
     path: LasrsStr,
     out: *mut *mut LasrsReader,
 ) -> LasrsStatus {
-    open(out, || Ok(Reader::from_path(unsafe { path.to_str() }?)?))
+    let source = || Ok(BufReader::new(File::open(unsafe { path.to_str() }?)?));
+    open(out, source, ReaderOptions::default())
 }
 
 #[unsafe(no_mangle)]
@@ -53,7 +67,11 @@ pub unsafe extern "C" fn lasrs_reader_new(
     stream: LasrsInputStream,
     out: *mut *mut LasrsReader,
 ) -> LasrsStatus {
-    open(out, || Ok(Reader::new(InputStream::buffered(stream))?))
+    open(
+        out,
+        || Ok(InputStream::buffered(stream)),
+        ReaderOptions::default(),
+    )
 }
 
 #[unsafe(no_mangle)]
@@ -62,13 +80,8 @@ pub unsafe extern "C" fn lasrs_reader_with_options(
     laz_parallelism: LasrsLazParallelism,
     out: *mut *mut LasrsReader,
 ) -> LasrsStatus {
-    open(out, || {
-        let options = ReaderOptions::default().with_laz_parallelism(laz_parallelism.into());
-        Ok(Reader::with_options(
-            InputStream::buffered(stream),
-            options,
-        )?)
-    })
+    let options = ReaderOptions::default().with_laz_parallelism(laz_parallelism.into());
+    open(out, || Ok(InputStream::buffered(stream)), options)
 }
 
 #[unsafe(no_mangle)]
@@ -79,7 +92,7 @@ pub unsafe extern "C" fn lasrs_reader_free(reader: *mut LasrsReader) {
 /// Borrowed, valid while the reader is alive.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lasrs_reader_header(reader: *const LasrsReader) -> *const LasrsHeader {
-    LasrsHeader::borrow(unsafe { &(*reader).0 }.header())
+    LasrsHeader::borrow(unsafe { &(*reader).header })
 }
 
 #[unsafe(no_mangle)]
@@ -89,7 +102,7 @@ pub unsafe extern "C" fn lasrs_reader_read_points(
     out: *mut *mut LasrsPointData,
 ) -> LasrsStatus {
     guard(|| {
-        let points = unsafe { &mut (*reader).0 }.read_points(n)?;
+        let points = limits::read_points(unsafe { &mut (*reader).reader }, n)?;
         unsafe { out.write(into_handle(LasrsPointData(points))) };
         Ok(())
     })
@@ -101,7 +114,9 @@ pub unsafe extern "C" fn lasrs_reader_read_all(
     out: *mut *mut LasrsPointData,
 ) -> LasrsStatus {
     guard(|| {
-        let points = unsafe { &mut (*reader).0 }.read_all()?;
+        let reader = unsafe { &mut (*reader).reader };
+        let remaining = reader.header().number_of_points();
+        let points = limits::read_points(reader, remaining)?;
         unsafe { out.write(into_handle(LasrsPointData(points))) };
         Ok(())
     })
@@ -115,7 +130,7 @@ pub unsafe extern "C" fn lasrs_reader_fill_points(
     read: *mut u64,
 ) -> LasrsStatus {
     guard(|| {
-        let count = unsafe { &mut (*reader).0 }.fill_points(n, unsafe { &mut (*target).0 })?;
+        let count = unsafe { &mut (*reader).reader }.fill_points(n, unsafe { &mut (*target).0 })?;
         unsafe { read.write(count) };
         Ok(())
     })
@@ -123,5 +138,10 @@ pub unsafe extern "C" fn lasrs_reader_fill_points(
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn lasrs_reader_seek(reader: *mut LasrsReader, position: u64) -> LasrsStatus {
-    guard(|| Ok(unsafe { &mut (*reader).0 }.seek(position)?))
+    guard(|| {
+        let reader = unsafe { &mut (*reader).reader };
+        // las-rs underflows when reading after a seek past the last point.
+        let position = position.min(reader.header().number_of_points());
+        Ok(reader.seek(position)?)
+    })
 }

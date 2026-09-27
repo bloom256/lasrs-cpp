@@ -20,6 +20,7 @@ mod copc;
 mod error;
 mod geotiff;
 mod header;
+mod limits;
 mod point_data;
 mod reader;
 mod stream;

@@ -51,6 +51,7 @@ add_executable(lasrs_tests
   test_large.cpp
   test_point_data.cpp
   test_reader.cpp
+  test_robustness.cpp
   test_types.cpp
   test_writer.cpp)
 target_link_libraries(lasrs_tests PRIVATE lasrs::lasrs Catch2::Catch2WithMain)

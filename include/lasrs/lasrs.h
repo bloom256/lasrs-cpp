@@ -48,6 +48,10 @@ typedef enum LasrsLazParallelism {
 
 typedef struct LasrsBuilder LasrsBuilder;
 
+/**
+ * Keeps its own copy of the header so the pointer handed out by
+ * `lasrs_copc_reader_header` never aliases the mutably borrowed reader.
+ */
 typedef struct LasrsCopcReader LasrsCopcReader;
 
 typedef struct LasrsGeoTiffCrs LasrsGeoTiffCrs;
@@ -59,6 +63,10 @@ typedef struct LasrsHeader LasrsHeader;
 
 typedef struct LasrsPointData LasrsPointData;
 
+/**
+ * Keeps its own copy of the header so the pointer handed out by
+ * `lasrs_reader_header` never aliases the mutably borrowed reader.
+ */
 typedef struct LasrsReader LasrsReader;
 
 typedef struct LasrsWriter LasrsWriter;
