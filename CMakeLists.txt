@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 project(lasrs-cpp
-  VERSION 0.1.1
+  VERSION 0.2.0
   DESCRIPTION "Fast LAS/LAZ/COPC for C++, powered by las-rs"
   HOMEPAGE_URL "https://github.com/bloom256/lasrs-cpp"
   LANGUAGES C CXX)

@@ -196,7 +196,7 @@ Let CMake download the bundle for your platform from the
 [releases](https://github.com/bloom256/lasrs-cpp/releases):
 
 ```cmake
-set(LASRS_VERSION v0.1.1)
+set(LASRS_VERSION v0.2.0)
 if(WIN32)
   set(lasrs_platform windows-x64)
   if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "^MultiThreaded" AND NOT CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "DLL")
@@ -253,7 +253,7 @@ without CMake is described in [docs/BUILDING.md](docs/BUILDING.md).
 include(FetchContent)
 FetchContent_Declare(lasrs
   GIT_REPOSITORY https://github.com/bloom256/lasrs-cpp.git
-  GIT_TAG v0.1.1)
+  GIT_TAG v0.2.0)
 FetchContent_MakeAvailable(lasrs)
 target_link_libraries(my_app PRIVATE lasrs::lasrs)
 ```
