@@ -19,7 +19,7 @@ jobs:
     name: Notices and test data
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust
         run: .github/scripts/install-rust.sh
       - uses: taiki-e/install-action@v2
@@ -28,7 +28,7 @@ jobs:
       - name: Generate
         working-directory: rust
         run: cargo about generate about.hbs -o ../THIRD-PARTY-NOTICES.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: third-party-notices
           path: THIRD-PARTY-NOTICES.txt
@@ -38,7 +38,7 @@ jobs:
           manifest=$(cargo metadata --format-version 1 --locked --manifest-path rust/Cargo.toml |
             jq -r '.packages[] | select(.name == "las") | .manifest_path')
           cp -r "$(dirname "$manifest")/tests/data" test_data
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: test-data
           path: test_data
@@ -63,7 +63,7 @@ jobs:
           - { name: macos-arm64, os: macos-latest }
           - { name: macos-x64, os: macos-15-intel }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust
         run: .github/scripts/install-rust.sh
       - uses: Swatinem/rust-cache@v2
@@ -84,7 +84,7 @@ jobs:
           cmake --preset release -DLASRS_BUILD_TESTS=OFF -DLASRS_BUILD_EXAMPLES=OFF ${{ matrix.cmake-args }}
           cmake --build --preset release
           cmake --install build/release --prefix dist/lasrs-cpp
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: third-party-notices
           path: dist/lasrs-cpp/share/lasrs
@@ -96,7 +96,7 @@ jobs:
             cmake --build build/package-$config
             ctest --test-dir build/package-$config --output-on-failure
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: lasrs-cpp-${{ matrix.name }}
           path: dist/lasrs-cpp
