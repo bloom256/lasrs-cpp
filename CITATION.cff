@@ -5,8 +5,8 @@ type: software
 authors:
   - given-names: Danil
     family-names: An
-version: 0.1.0
-date-released: 2026-09-26
+version: 0.1.1
+date-released: 2026-09-27
 repository-code: "https://github.com/bloom256/lasrs-cpp"
 license:
   - MIT

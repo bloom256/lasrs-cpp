@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-27
+
+Fixes from a code review. Upgrading is recommended: several of these
+crashed the process instead of throwing `las::Error`.
+
+### Fixed
+
+- Corrupt files no longer abort the process: EVLR sizes and the LAZ chunk
+  count are checked against the real data size before las-rs allocates
+  from them, and points are read in batches, so a bogus point count fails
+  cleanly.
+- `Header(Version)` with a version las-rs cannot build and
+  `PointData::resize_for` with a size that overflows throw instead of
+  aborting.
+- Reading after `Reader::seek` past the last point returns no points
+  instead of failing.
+- `CopcReader::read_entry` accepts only entries from the file's hierarchy.
+- Readers and writers on `std::istream` / `std::ostream` work when the
+  data does not start at position 0 and when the stream has `exceptions()`
+  enabled; unusable streams are rejected with a clear error.
+- Views returned by `Writer::header()` (e.g. `system_identifier()`) stay
+  valid while the writer lives.
+- `find_package(lasrs)` can be called more than once.
+- lasrs-cpp works as a CMake subproject (`add_subdirectory` /
+  `FetchContent`) without adding its files to the parent's install
+  (`LASRS_INSTALL`); `lasrs::lasrs_ffi` exists there too.
+- The static-CRT Windows bundle links with `/MTd` as well as `/MT`, and
+  the README download snippet detects
+  `MultiThreaded$<$<CONFIG:Debug>:Debug>` as a static CRT.
+- Headers compile cleanly with `-Wshadow -Wconversion -Wsign-conversion`;
+  VLR user id checks no longer depend on the C locale.
+
+### Changed
+
+- The Rust crate is built with the committed `Cargo.lock` (`--locked`).
+- The README states the API scope precisely; the parts of the las-rs API
+  still missing are listed in docs/ROADMAP.md.
+- SECURITY.md describes the remaining known gap with untrusted COPC files.
+
 ## [0.1.0] - 2026-09-26
 
 First release: the las-rs 0.11 API in C++.
