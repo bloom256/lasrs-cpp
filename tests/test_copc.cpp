@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <fstream>
 #include <numeric>
@@ -29,6 +30,33 @@ TEST_CASE("The COPC info VLR is recognized")
     CHECK(vlr.is_copc_info());
     vlr.user_id = "COPC";
     CHECK_FALSE(vlr.is_copc_info());
+    vlr.user_id = "copc";
+    vlr.record_id = las::copc::CopcHierarchyVlr::RECORD_ID;
+    CHECK(vlr.is_copc_hierarchy());
+}
+
+TEST_CASE("Header::copc_hierarchy_evlr lists the same entries as CopcReader")
+{
+    auto reader = las::CopcReader::from_path(test::data("autzen.copc.laz"));
+    const auto evlrs = reader.header().evlrs();
+    CHECK(std::ranges::count_if(evlrs, &las::Vlr::is_copc_hierarchy) == 1);
+
+    const auto hierarchy = reader.header().copc_hierarchy_evlr();
+    REQUIRE(hierarchy.has_value());
+    auto entries = hierarchy->iter_entries();
+    auto expected = reader.hierarchy_entries();
+    std::ranges::sort(entries, {}, &las::copc::Entry::key);
+    std::ranges::sort(expected, {}, &las::copc::Entry::key);
+    CHECK(entries == expected);
+
+    const auto copy = *hierarchy;
+    CHECK(copy.iter_entries().size() == entries.size());
+}
+
+TEST_CASE("Plain LAS files have no COPC hierarchy")
+{
+    const auto reader = las::Reader::from_path(test::data("autzen.las"));
+    CHECK_FALSE(reader.header().copc_hierarchy_evlr().has_value());
 }
 
 TEST_CASE("Plain LAS files have no COPC info")

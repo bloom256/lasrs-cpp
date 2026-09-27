@@ -265,6 +265,16 @@ class Header
                                  info.spacing,  info.gpstime_minimum, info.gpstime_maximum};
     }
 
+    std::optional<copc::CopcHierarchyVlr> copc_hierarchy_evlr() const
+    {
+        auto *vlr = lasrs_header_copc_hierarchy_evlr(ptr_);
+        if (vlr == nullptr)
+        {
+            return std::nullopt;
+        }
+        return copc::CopcHierarchyVlr::from_c(vlr);
+    }
+
     bool operator==(const Header &other) const
     {
         return lasrs_header_eq(ptr_, other.ptr_);

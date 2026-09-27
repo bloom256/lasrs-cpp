@@ -364,6 +364,7 @@ struct Vlr
         return is_projection() && is_geotiff_record();
     }
     bool is_copc_info() const;
+    bool is_copc_hierarchy() const;
 
     bool operator==(const Vlr &) const = default;
 
@@ -701,6 +702,65 @@ inline Bounds Bounds::adapt(const Vector<Transform> &transforms) const
     LasrsBounds result{};
     detail::check(lasrs_bounds_adapt(detail::to_c(*this), detail::to_c(transforms), &result));
     return detail::from_c(result);
+}
+
+namespace copc
+{
+
+class CopcHierarchyVlr
+{
+  public:
+    static constexpr uint16_t RECORD_ID = 1000;
+
+    CopcHierarchyVlr(const CopcHierarchyVlr &other) : handle_(lasrs_copc_hierarchy_vlr_clone(other.handle_.get()))
+    {
+    }
+    CopcHierarchyVlr(CopcHierarchyVlr &&) noexcept = default;
+
+    CopcHierarchyVlr &operator=(const CopcHierarchyVlr &other)
+    {
+        if (this != &other)
+        {
+            handle_.reset(lasrs_copc_hierarchy_vlr_clone(other.handle_.get()));
+        }
+        return *this;
+    }
+
+    CopcHierarchyVlr &operator=(CopcHierarchyVlr &&) noexcept = default;
+    ~CopcHierarchyVlr() = default;
+
+    std::vector<Entry> iter_entries() const
+    {
+        size_t len = 0;
+        detail::check(lasrs_copc_hierarchy_vlr_entries_len(handle_.get(), &len));
+        std::vector<LasrsEntry> entries(len);
+        detail::check(lasrs_copc_hierarchy_vlr_iter_entries(handle_.get(), entries.data(), entries.size(), &len));
+        entries.resize(len);
+        std::vector<Entry> result;
+        result.reserve(len);
+        std::ranges::transform(entries, std::back_inserter(result),
+                               [](const LasrsEntry &e) { return detail::from_c(e); });
+        return result;
+    }
+
+    static CopcHierarchyVlr from_c(LasrsCopcHierarchyVlr *owned)
+    {
+        return CopcHierarchyVlr(owned);
+    }
+
+  private:
+    explicit CopcHierarchyVlr(LasrsCopcHierarchyVlr *owned) : handle_(owned)
+    {
+    }
+
+    detail::Handle<LasrsCopcHierarchyVlr, lasrs_copc_hierarchy_vlr_free> handle_;
+};
+
+} // namespace copc
+
+inline bool Vlr::is_copc_hierarchy() const
+{
+    return user_id == copc::USER_ID && record_id == copc::CopcHierarchyVlr::RECORD_ID;
 }
 
 } // namespace las

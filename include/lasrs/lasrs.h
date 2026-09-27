@@ -56,6 +56,11 @@ typedef enum LasrsLazParallelism {
 typedef struct LasrsBuilder LasrsBuilder;
 
 /**
+ * Opaque handle; owns a `las::copc::CopcHierarchyVlr`.
+ */
+typedef struct LasrsCopcHierarchyVlr LasrsCopcHierarchyVlr;
+
+/**
  * Keeps its own copy of the header so the pointer handed out by
  * `lasrs_copc_reader_header` never aliases the mutably borrowed reader.
  */
@@ -400,6 +405,27 @@ enum LasrsStatus lasrs_copc_reader_query(struct LasrsCopcReader *reader,
                                          struct LasrsLodSelection levels,
                                          struct LasrsBoundsSelection bounds,
                                          struct LasrsPointData **out);
+
+/**
+ * Returns null if the header has no readable COPC hierarchy EVLR.
+ */
+struct LasrsCopcHierarchyVlr *lasrs_header_copc_hierarchy_evlr(const struct LasrsHeader *header);
+
+struct LasrsCopcHierarchyVlr *lasrs_copc_hierarchy_vlr_clone(const struct LasrsCopcHierarchyVlr *vlr);
+
+void lasrs_copc_hierarchy_vlr_free(struct LasrsCopcHierarchyVlr *vlr);
+
+enum LasrsStatus lasrs_copc_hierarchy_vlr_entries_len(const struct LasrsCopcHierarchyVlr *vlr,
+                                                      size_t *out);
+
+/**
+ * Writes up to `capacity` entries of `iter_entries` to `out` and the number
+ * written to `written`.
+ */
+enum LasrsStatus lasrs_copc_hierarchy_vlr_iter_entries(const struct LasrsCopcHierarchyVlr *vlr,
+                                                       struct LasrsEntry *out,
+                                                       size_t capacity,
+                                                       size_t *written);
 
 /**
  * Message of the last failed call on this thread. Valid until the next

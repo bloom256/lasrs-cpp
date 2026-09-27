@@ -3,7 +3,7 @@
 use crate::{
     error::{BoxError, LasrsStatus, guard},
     free_handle,
-    header::LasrsHeader,
+    header::{LasrsHeader, header_ref},
     into_handle, limits,
     point_data::LasrsPointData,
     stream::{BufferedInput, InputStream, LasrsInputStream},
@@ -11,7 +11,7 @@ use crate::{
 };
 use las::{
     BoundsSelection, CopcReader, Header, LodSelection,
-    copc::{Entry, VoxelKey},
+    copc::{CopcHierarchyVlr, Entry, VoxelKey},
 };
 use std::{fs::File, io::BufReader};
 
@@ -209,6 +209,70 @@ pub unsafe extern "C" fn lasrs_copc_reader_query(
         let (levels, bounds) = (levels.into(), bounds.into());
         let points = with_reader!(unsafe { &mut (*reader).source }, r => r.query(levels, bounds))?;
         unsafe { out.write(into_handle(LasrsPointData(points))) };
+        Ok(())
+    })
+}
+
+/// Opaque handle; owns a `las::copc::CopcHierarchyVlr`.
+pub struct LasrsCopcHierarchyVlr(CopcHierarchyVlr);
+
+/// Returns null if the header has no readable COPC hierarchy EVLR.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lasrs_header_copc_hierarchy_evlr(
+    header: *const LasrsHeader,
+) -> *mut LasrsCopcHierarchyVlr {
+    unsafe { header_ref(header) }
+        .copc_hierarchy_evlr()
+        .map_or(std::ptr::null_mut(), |vlr| {
+            into_handle(LasrsCopcHierarchyVlr(vlr))
+        })
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lasrs_copc_hierarchy_vlr_clone(
+    vlr: *const LasrsCopcHierarchyVlr,
+) -> *mut LasrsCopcHierarchyVlr {
+    into_handle(LasrsCopcHierarchyVlr(unsafe { &(*vlr).0 }.clone()))
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lasrs_copc_hierarchy_vlr_free(vlr: *mut LasrsCopcHierarchyVlr) {
+    unsafe { free_handle(vlr) }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lasrs_copc_hierarchy_vlr_entries_len(
+    vlr: *const LasrsCopcHierarchyVlr,
+    out: *mut usize,
+) -> LasrsStatus {
+    guard(|| {
+        let mut len = 0;
+        for entry in unsafe { &(*vlr).0 }.iter_entries() {
+            let _ = entry?;
+            len += 1;
+        }
+        unsafe { out.write(len) };
+        Ok(())
+    })
+}
+
+/// Writes up to `capacity` entries of `iter_entries` to `out` and the number
+/// written to `written`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn lasrs_copc_hierarchy_vlr_iter_entries(
+    vlr: *const LasrsCopcHierarchyVlr,
+    out: *mut LasrsEntry,
+    capacity: usize,
+    written: *mut usize,
+) -> LasrsStatus {
+    guard(|| {
+        let out = unsafe { borrow_slice_mut(out, capacity) };
+        let mut n = 0;
+        for (slot, entry) in out.iter_mut().zip(unsafe { &(*vlr).0 }.iter_entries()) {
+            *slot = (*entry?).into();
+            n += 1;
+        }
+        unsafe { written.write(n) };
         Ok(())
     })
 }
