@@ -3,6 +3,7 @@
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 #include <fstream>
+#include <optional>
 #include <sstream>
 
 #include "common.hpp"
@@ -11,6 +12,31 @@ using Catch::Matchers::ContainsSubstring;
 
 namespace
 {
+
+// A seekable stream buffer that fails once it would grow past `limit` bytes,
+// like a full disk.
+class LimitedBuffer : public std::stringbuf
+{
+  public:
+    explicit LimitedBuffer(std::streamsize limit) : limit_(limit)
+    {
+    }
+
+  protected:
+    std::streamsize xsputn(const char *s, std::streamsize n) override
+    {
+        const auto end = pubseekoff(0, std::ios_base::cur, std::ios_base::out) + n;
+        return end > limit_ ? 0 : std::stringbuf::xsputn(s, n);
+    }
+
+    int_type overflow(int_type) override
+    {
+        return traits_type::eof();
+    }
+
+  private:
+    std::streamoff limit_;
+};
 
 las::Header compressed(const las::Header &header, bool compress)
 {
@@ -97,4 +123,22 @@ TEST_CASE("Views into Writer::header stay valid while the writer lives")
     const std::string_view system_identifier = writer.header().system_identifier();
     writer.write_point(las::Point());
     CHECK(system_identifier == "las-rs");
+}
+
+TEST_CASE("Write errors are reported and the writer can still be destroyed")
+{
+    LimitedBuffer buffer(4096);
+    std::ostream stream(&buffer);
+    const bool compress = GENERATE(false, true);
+    auto writer = std::make_optional<las::Writer>(stream, compressed(las::Header(), compress));
+    CHECK_THROWS_AS(
+        [&] {
+            for (int i = 0; i < 10000; ++i)
+            {
+                writer->write_point(las::Point());
+            }
+            writer->close();
+        }(),
+        las::Error);
+    writer.reset();
 }

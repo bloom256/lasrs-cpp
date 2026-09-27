@@ -10,8 +10,10 @@ namespace las
 {
 
 // Destroying an open writer closes it but cannot report errors; call close()
-// to observe them. Stream-based writers keep a reference to the stream: it
-// must outlive the writer.
+// to observe them. If writing or closing failed, destroying the writer still
+// frees everything, but las-rs prints the error to stderr as a panic message.
+// Stream-based writers keep a reference to the stream: it must outlive the
+// writer. A moved-from writer may only be destroyed or assigned to.
 class Writer
 {
   public:
