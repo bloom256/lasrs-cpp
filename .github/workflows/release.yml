@@ -24,8 +24,12 @@ jobs:
           version=${GITHUB_REF_NAME#v}
           cmake_version=$(sed -n 's/^  VERSION \([0-9.]*\)$/\1/p' CMakeLists.txt)
           cargo_version=$(sed -n 's/^version = "\(.*\)"$/\1/p' rust/Cargo.toml)
-          if [ "$version" != "$cmake_version" ] || [ "$version" != "$cargo_version" ]; then
-            echo "::error::tag $GITHUB_REF_NAME, CMakeLists.txt $cmake_version, rust/Cargo.toml $cargo_version"
+          citation_version=$(sed -n 's/^version: \(.*\)$/\1/p' CITATION.cff)
+          readme_versions=$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' README.md | sort -u | tr '\n' ' ')
+          echo "CMakeLists.txt $cmake_version, rust/Cargo.toml $cargo_version, CITATION.cff $citation_version, README $readme_versions"
+          if [ "$version" != "$cmake_version" ] || [ "$version" != "$cargo_version" ] ||
+            [ "$version" != "$citation_version" ] || [ "$readme_versions" != "v$version " ]; then
+            echo "::error::the versions above must all match the tag $GITHUB_REF_NAME"
             exit 1
           fi
       - name: Changelog has a section for the version
