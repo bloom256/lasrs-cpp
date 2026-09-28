@@ -1,8 +1,12 @@
-# <img src="docs/images/logo.svg" alt="" height="32"> lasrs-cpp
+<p align="center">
+  <img src="docs/images/banner.svg" alt="lasrs-cpp" width="420">
+</p>
 
-[![CI](https://github.com/bloom256/lasrs-cpp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bloom256/lasrs-cpp/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/bloom256/lasrs-cpp?include_prereleases&sort=semver)](https://github.com/bloom256/lasrs-cpp/releases)
-[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
+<p align="center">
+  <a href="https://github.com/bloom256/lasrs-cpp/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/bloom256/lasrs-cpp/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/bloom256/lasrs-cpp/releases"><img alt="Release" src="https://img.shields.io/github/v/release/bloom256/lasrs-cpp?include_prereleases&sort=semver"></a>
+  <a href="#license"><img alt="License: MIT OR Apache-2.0" src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg"></a>
+</p>
 
 Fast LAS / LAZ / COPC reading and writing for C++, powered by the Rust
 crate [las-rs](https://github.com/gadomski/las-rs) and its parallel LAZ
