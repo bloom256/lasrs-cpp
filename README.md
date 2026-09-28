@@ -1,3 +1,5 @@
+<img src="docs/images/logo.svg" alt="lasrs-cpp logo" width="96">
+
 # lasrs-cpp
 
 [![CI](https://github.com/bloom256/lasrs-cpp/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bloom256/lasrs-cpp/actions/workflows/ci.yml)
