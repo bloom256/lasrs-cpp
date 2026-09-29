@@ -234,6 +234,11 @@ find_package(lasrs CONFIG REQUIRED PATHS ${lasrs_SOURCE_DIR} NO_DEFAULT_PATH)
 target_link_libraries(my_app PRIVATE lasrs::lasrs)
 ```
 
+Releases after v0.2.0 are immutable. To pin the download yourself, add
+`URL_HASH SHA256=<hash>` to `FetchContent_Declare`, with the sha256 shown
+for your archive on the release page or in `SHA256SUMS.txt`; each
+platform's archive has its own hash.
+
 Or download an archive yourself and point CMake at it with
 `-DCMAKE_PREFIX_PATH=<extracted archive>` and `find_package(lasrs REQUIRED)`:
 
